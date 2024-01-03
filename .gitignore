@@ -1,0 +1,9 @@
+# Dependency directories
+node_modules/
+
+# Optional npm cache & logs
+npm-debug.log*
+npm-cache/
+
+# Operating System specific files
+.DS_Store

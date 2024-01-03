@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Paradox Candidate Deletion Tool</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script>
+        async function getAuthToken(accountId, secretKey) {
+            const params = new URLSearchParams();
+            params.append('grant_type', 'client_credentials');
+            params.append('client_id', accountId);
+            params.append('client_secret', secretKey);
+
+            const response = await fetch('http://localhost:3000/auth/token', { // Pointing to your local server
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: params
+            });
+
+            const data = await response.json();
+            console.log("Auth response data:", data)
+            return data.access_token;
+        }
+
+        async function deleteCandidate(candidateId, authToken) {
+            try {
+                const response = await fetch(`http://localhost:3000/delete-candidate/${candidateId}`, { // Pointing to your local server
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                return await response.json();
+            } catch (error) {
+                return { error: error.message };
+            }
+        }
+
+        async function deleteCandidates() {
+            const accountId = document.getElementById('accountId').value;
+            const secretKey = document.getElementById('secretKey').value;
+            const candidateIds = document.getElementById('candidateIds').value.split(',');
+
+            const authToken = await getAuthToken(accountId, secretKey);
+
+            for (const candidateId of candidateIds) {
+                const response = await deleteCandidate(candidateId.trim(), authToken);
+                document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+            }
+        }
+
+    </script>
+</head>
+
+<body>
+    <h1>Mass Candidate Deletion Tool</h1>
+    <div>
+        <label for="accountId">Account ID:</label>
+        <input type="text" id="accountId">
+    </div>
+    <div>
+        <label for="secretKey">Secret Key:</label>
+        <input type="password" id="secretKey">
+    </div>
+    <div>
+        <label for="candidateIds">Candidate IDs (comma-separated):</label>
+        <textarea id="candidateIds" rows="4"></textarea>
+    </div>
+    <button onclick="deleteCandidates()">Delete Candidates</button>
+    <div id="output"></div>
+</body>
+
+</html>
