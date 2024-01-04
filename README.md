@@ -1,5 +1,5 @@
 
-# Candidate Deletion Tool
+# Paradox Candidate Deletion Tool
 
 This tool provides a simple web interface and server setup to handle requests for deleting candidates in the Paradox CEM. It's built with Node.js and Express, and features a basic HTML frontend.
 
