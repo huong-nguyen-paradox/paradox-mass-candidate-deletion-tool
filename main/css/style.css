@@ -1,0 +1,113 @@
+/* body {
+    font-family: Arial, sans-serif;
+    background-color: #282c34;
+    color: #abb2bf;
+    margin: 0;
+    padding: 20px;
+} */
+
+body, html {
+    height: 100%;
+    background-color: #f7f7f7;
+    font-family: Arial, sans-serif;
+    color: #abb2bf;
+}
+
+h1 {
+    color: #61dafb;
+}
+
+h1.paradox {
+    color: #25c9d0;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input[type="text"], input[type="password"], textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #61dafb;
+    color: #282c34;
+    border: none;
+    padding: 10px 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button[disabled]:hover {
+    background-color: #abb2bf
+}
+
+button:disabled {
+    background-color: #abb2bf;
+    cursor: default;
+    color: white
+}
+
+  input[type=text]:focus, input[type=password]:focus, textarea:focus {
+    border-bottom: 1px solid #25c9d0 !important;
+    box-shadow: 0 1px 0 0 #25c9d0 !important;
+  }
+
+#output {
+    background-color: #1c1f24;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.flex-container {
+    height: 100%;
+    align-items: center;
+    display: flex;
+    flex: 1 0 auto;
+}
+
+.custom {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.card-title-flex {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.card-title-flex .material-icons {
+    margin-right: 10px; 
+}
+
+.card-title-flex .card-title {
+    flex-grow: 1;
+    text-align: center;
+    margin: 0;
+}
+
+.bordered {
+    border: 2.5px solid;
+    border-radius: 50px;
+    padding: 5px
+}
+
+.paradox-primary-btn {
+    background-color: #25c9d0
+    
+}
+
+.paradox-primary-btn:hover {
+    background-color: #51d4d9;
+}
