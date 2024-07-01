@@ -1,35 +1,25 @@
 #!/bin/sh
 
-check_colima() {
-    if ! command -v colima &> /dev/null; then
-        echo "Colima is not installed. Installing using Homebrew..."
-        brew install colima
+deps=(colima docker docker-buildx)
 
-        if ! command -v colima &> /dev/null; then
-            echo "Colima installation failed. Exiting."
-            exit 1
+check_dependencies() {
+
+    deps=("$@")
+    for dep in "${deps[@]}"; do
+        if ! command -v "$dep" &> /dev/null; then
+            echo "$dep is not installed. Installing using Homebrew..."
+            brew install "$dep"
+
+            if ! command -v "$dep" &> /dev/null; then
+                echo "$dep installation failed. Exiting."
+                exit 1
+            else
+                echo "$dep installed successfully."
+            fi
         else
-            echo "Colima installed successfully."
+            echo "$dep is already installed."
         fi
-    else
-        echo "Colima is already installed."
-    fi
-}
-
-check_docker() {
-    if ! command -v docker &> /dev/null; then
-        echo "Dcoker is not installed. Installing using Homebrew..."
-        brew install docker
-
-        if ! command -v docker &> /dev/null; then
-            echo "Docker installation failed. Exiting."
-            exit 1
-        else
-            echo "Docker installed successfully."
-        fi
-    else
-        echo "Docker is already installed."
-    fi
+  done
 }
 
 start_colima() {
@@ -41,9 +31,7 @@ start_colima() {
     fi
 }
 
-check_colima
-
-check_docker
+check_dependencies "${deps[@]}"
 
 start_colima
 
