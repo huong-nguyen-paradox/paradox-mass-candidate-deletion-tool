@@ -14,7 +14,7 @@ This tool provides a simple web interface and server setup to handle requests fo
 
 1. Clone the repository to your local machine:
    ```bash
-   git clone https://github.com/ChrisKGV/paradox-mass-candidate-deletion-tool
+   git clone https://github.com/chris-prdx/paradox-mass-candidate-deletion-tool
    ```
 
 2. Navigate to the project directory:
@@ -27,9 +27,9 @@ This tool provides a simple web interface and server setup to handle requests fo
    chmod +x setup-mass-update.sh
    ```
 4. Run the install script:
-  ```bash
+   ```bash
    ./setup-mass-update.sh
-```
+   ```
 
 Once the server is running, open `localhost:3000/main` in your web browser to interact with the tool.
 
