@@ -6,12 +6,15 @@ async function updateStatus(status, id, authToken) {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ 'candidate_journey_status': status})
+            body: JSON.stringify({ "candidate_journey_status":  status })
         })
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`HTTP error! status: ${response.status} - ${error.message}`);
+        }
         return await response.json();
-    } catch (error) {
-        console.log(error);
-        return error.message;
+    } catch (err) {
+        throw err;
     }
 }
 
@@ -20,18 +23,23 @@ async function getAuthToken(accountId, secretKey) {
     params.append('grant_type', 'client_credentials');
     params.append('client_id', accountId);
     params.append('client_secret', secretKey);
-
-    const response = await fetch('/auth/token', { // Pointing to your local server
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: params
-    });
-
-    const data = await response.json();
-    console.log("Auth response data:", data)
-    return data.access_token;
+    try {
+        const response = await fetch('/auth/token', { // Pointing to your local server
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`HTTP error! status: ${response.status} - ${error.message}`);
+        }
+        const data = await response.json();
+        return data.access_token;
+    } catch (err) {
+        throw err;
+    }
 }
 
 async function startUpdate() {
@@ -40,11 +48,15 @@ async function startUpdate() {
     const status = document.getElementById('status').value;
     const candidateIds = document.getElementById('candidateIds').value.split(',');
 
-    const authToken = await getAuthToken(accountId, secretKey);
-
-    for (const candidateId of candidateIds) {
-        const response = await updateStatus(status, candidateId.trim(), authToken);
-        document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+    try {
+        const authToken = await getAuthToken(accountId, secretKey);
+        for (const candidateId of candidateIds) {
+            const response = await updateStatus(status, candidateId.trim(), authToken);
+            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+        }
+    } catch (err) {
+        M.toast({html: err});
+        return;
     }
 }
 
