@@ -1,5 +1,5 @@
 
-# Paradox Candidate Deletion Tool
+# Paradox Mass Update Tool
 
 This tool provides a simple web interface and server setup to handle requests for deleting candidates in the Paradox CEM. It's built with Node.js and Express, and features a basic HTML frontend.
 
@@ -22,19 +22,16 @@ This tool provides a simple web interface and server setup to handle requests fo
    cd [Your Project Directory Name]
    ```
 
-3. Install the required dependencies:
+3. Make the install script executable:
    ```bash
-   npm install
+   chmod +x setup-mass-update.sh
    ```
-
-## Running the Server
-
-Start the server with the following command:
-```bash
-node server.js
+4. Run the install script:
+  ```bash
+   ./setup-mass-update.sh
 ```
 
-Once the server is running, open `DeleteCandidates.html` in your web browser to interact with the tool.
+Once the server is running, open `localhost:3000/main` in your web browser to interact with the tool.
 
 ## Usage
 
