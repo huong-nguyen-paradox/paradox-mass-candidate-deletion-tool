@@ -1,6 +1,6 @@
 #!/bin/sh
 
-check_and_install_colima() {
+check_colima() {
     if ! command -v colima &> /dev/null; then
         echo "Colima is not installed. Installing using Homebrew..."
         brew install colima
@@ -16,6 +16,22 @@ check_and_install_colima() {
     fi
 }
 
+check_docker() {
+    if ! command -v docker &> /dev/null; then
+        echo "Dcoker is not installed. Installing using Homebrew..."
+        brew install docker
+
+        if ! command -v docker &> /dev/null; then
+            echo "Docker installation failed. Exiting."
+            exit 1
+        else
+            echo "Docker installed successfully."
+        fi
+    else
+        echo "Docker is already installed."
+    fi
+}
+
 start_colima() {
     if ! colima status | grep -q 'Running'; then
         echo "Starting Colima..."
@@ -25,7 +41,9 @@ start_colima() {
     fi
 }
 
-check_and_install_colima
+check_colima
+
+check_docker
 
 start_colima
 
