@@ -1,5 +1,21 @@
 #!/bin/sh
 
+check_and_install_colima() {
+    if ! command -v colima &> /dev/null; then
+        echo "Colima is not installed. Installing using Homebrew..."
+        brew install colima
+
+        if ! command -v colima &> /dev/null; then
+            echo "Colima installation failed. Exiting."
+            exit 1
+        else
+            echo "Colima installed successfully."
+        fi
+    else
+        echo "Colima is already installed."
+    fi
+}
+
 start_colima() {
     if ! colima status | grep -q 'Running'; then
         echo "Starting Colima..."
@@ -9,6 +25,7 @@ start_colima() {
     fi
 }
 
+check_and_install_colima
 
 start_colima
 
