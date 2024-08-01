@@ -50,6 +50,7 @@ Contributions to this project are welcome. To contribute:
 ## Author
 
 - Chris Garcia
+- Christopher Winfrey
 
 ## License
 
