@@ -3,13 +3,11 @@
 deps=(colima docker docker-buildx)
 
 check_dependencies() {
-
     deps=("$@")
     for dep in "${deps[@]}"; do
         if ! command -v "$dep" &> /dev/null; then
             echo "$dep is not installed. Installing using Homebrew..."
             brew install "$dep"
-
             if ! command -v "$dep" &> /dev/null; then
                 echo "$dep installation failed. Exiting."
                 exit 1
@@ -43,7 +41,7 @@ if [ $? -ne 0 ]; then
 fi
 
 
-docker run -d -p 3000:3000 --name mass-update-container mass-update
+docker run --restart=always -d -p 3000:3000 --name mass-update-container mass-update
 
 if [ $? -ne 0 ]; then
     echo "Failed to start the Docker container. Exiting."
