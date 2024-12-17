@@ -15,6 +15,29 @@
     <div class="container">
         <h1 class="grey-text text-darken-3">Update Candidate Status</h1>
         <div class="row">
+            <div class="input-field col s12">
+                <select id="apiInstance">
+                    <option value="" disabled selected>Select Instance</option>
+                    <option value="https://api.paradox.ai">PROD</option>
+                    <option value="https://stgapi.paradox.ai">STG</option>
+                    <option value="https://api.eu1.paradox.ai">EU PROD</option>
+                    <option value="https://api.stg.eu1.paradox.ai">EU STG</option>
+                    <option value="https://api.mchire.com">MCHIRE PROD</option>
+                    <option value="https://stgapi.mchire.com">MCHIRE STG</option>
+                    <option value="https://fedexapi.paradox.ai">FEDEX PROD</option>
+                    <option value="https://lowesapi.paradox.ai">LOWES PROD</option>
+                    <option value="https://api.sodexo.paradox.ai">SODEXO PROD</option>
+                    <option value="https://dardenapi.paradox.ai">DARDEN PROD</option>
+                    <option value="https://unileverapi.paradox.ai">UNILEVER</option>
+                    <option value="https://lockheedapi.paradox.ai">LOCKHEED PROD</option>
+                    <option value="https://aramarkapi.paradox.ai">ARAMARK PROD</option>
+                    <option value="https://pepsiapi.paradox.ai">PEPSI PROD</option>
+                    <option value="https://advantageapi.paradox.ai">ADVANTAGE PROD</option>
+                    <option value="https://regisapi.paradox.ai">REGIS PROD</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
             <div class="input-field col s6">
                 <label for="accountId">Account ID:</label>
                 <input type="text" id="accountId">
