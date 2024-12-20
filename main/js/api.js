@@ -68,7 +68,7 @@ async function startUpdate() {
     const apiInstance = document.getElementById('apiInstance').value;
     const requestTotal = candidateIds.length;
     let requestCount = 0;
-    document.getElementById('output-progress').style.visibility = 'visible';
+    document.getElementById('output-progress').style.display = 'flex';
     document.getElementById('stop').disabled = false;
 
     try {
@@ -102,7 +102,7 @@ async function startDeleteCandidates() {
     const apiInstance = document.getElementById('apiInstance').value;
     const requestTotal = candidateIds.length;
     let requestCount = 0;
-    document.getElementById('output-progress').style.visibility = 'visible';
+    document.getElementById('output-progress').style.display = 'flex';
     document.getElementById('stop').disabled = false;
 
     try {
