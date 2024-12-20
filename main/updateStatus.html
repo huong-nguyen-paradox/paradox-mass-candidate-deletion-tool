@@ -76,6 +76,10 @@
                 onclick="startUpdate()">Update Status
             </button>
         </div>
+        <div id="output-progress" class="flex-left-right-container" style="display:none">
+            <p>Requests Sent: <span id="count">0</span></p> 
+            <button id="stop" class="paradox-primary-btn grey-text text-lighten-5" onclick="stopRequest()">Stop</button>
+        </div>
         <div id="output"></div>
     </div>
     <script>

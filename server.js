@@ -7,6 +7,7 @@ import multer from 'multer';
 import csvParser from 'csv-parser';
 import fs from 'fs';
 import errorHandler from './errorHandler.js';
+import AbortController from 'abort-controller';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();

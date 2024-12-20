@@ -1,3 +1,6 @@
+// Global Variables
+let abortController = null; // Used to stop fetch requests
+
 async function getAuthToken(accountId, secretKey, apiInstance) {
     const params = new URLSearchParams();
     params.append('grant_type', 'client_credentials');
@@ -21,7 +24,7 @@ async function getAuthToken(accountId, secretKey, apiInstance) {
     }
 }
 
-async function updateStatus(status, candidateId, authToken, apiInstance) {
+async function updateStatus(status, candidateId, authToken, apiInstance, signal) {
     try {
         const response = await fetch(`/update-status/${candidateId}?apiInstance=${encodeURIComponent(apiInstance)}`, {
             method: "POST",
@@ -29,7 +32,8 @@ async function updateStatus(status, candidateId, authToken, apiInstance) {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ "candidate_journey_status": status })
+            body: JSON.stringify({ "candidate_journey_status": status }),
+            signal: signal // Attach the abort signal to the fetch request
         });
         if (!response.ok) {
             const error = await response.json();
@@ -41,13 +45,14 @@ async function updateStatus(status, candidateId, authToken, apiInstance) {
     }
 }
 
-async function deleteCandidate(candidateId, authToken, apiInstance) {
+async function deleteCandidate(candidateId, authToken, apiInstance, signal) {
     try {
         const response = await fetch(`/delete-candidate/${candidateId}?apiInstance=${encodeURIComponent(apiInstance)}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${authToken}`
-            }
+            }, 
+            signal: signal 
         });
         return await response.json();
     } catch (error) {
@@ -61,14 +66,26 @@ async function startUpdate() {
     const status = document.getElementById('status').value;
     const candidateIds = document.getElementById('candidateIds').value.split(',');
     const apiInstance = document.getElementById('apiInstance').value;
+    const requestTotal = candidateIds.length;
+    let requestCount = 0;
+    document.getElementById('output-progress').style.display = 'flex';
+    document.getElementById('stop').disabled = false;
 
     try {
         const authToken = await getAuthToken(accountId, secretKey, apiInstance);
+        abortController = new AbortController();
+        const signal = abortController.signal;
+        
         for (const candidateId of candidateIds) {
-            const response = await updateStatus(status, candidateId.trim(), authToken, apiInstance);
+            const response = await updateStatus(status, candidateId.trim(), authToken, apiInstance, signal);
             document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+            requestCount += 1;
+            document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
         }
     } catch (err) {
+        if (err.name === 'AbortError') {
+            document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
+        }
         if (typeof M !== 'undefined' && M.toast) {
             M.toast({ html: err });
         } else {
@@ -83,14 +100,25 @@ async function startDeleteCandidates() {
     const secretKey = document.getElementById('secretKey').value;
     const candidateIds = document.getElementById('candidateIds').value.split(',');
     const apiInstance = document.getElementById('apiInstance').value;
+    const requestTotal = candidateIds.length;
+    let requestCount = 0;
+    document.getElementById('output-progress').style.display = 'flex';
+    document.getElementById('stop').disabled = false;
 
     try {
         const authToken = await getAuthToken(accountId, secretKey, apiInstance);
+        abortController = new AbortController();
+        const signal = abortController.signal;
         for (const candidateId of candidateIds) {
-            const response = await deleteCandidate(candidateId.trim(), authToken, apiInstance);
+            const response = await deleteCandidate(candidateId.trim(), authToken, apiInstance, signal);
             document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+            requestCount += 1;
+            document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
         }
     } catch (err) {
+        if (err.name === 'AbortError') {
+            document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
+        }
         console.error(err);
         return;
     }
@@ -113,5 +141,13 @@ async function uploadFile() {
         area.value = columnData.join(', ');
     } catch (error) {
         console.error('Error:', error);
+    }
+}
+
+
+function stopRequest() {
+    if (abortController) {
+        abortController.abort(); // Abort the requests
+        document.getElementById('stop').disabled = true;
     }
 }
