@@ -90,6 +90,14 @@ input::file-selector-button {
     flex: 1 0 auto;
 }
 
+.flex-left-right-container {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 5px; 
+    border: 1px solid #ccc; 
+}
+
 .custom {
     display: flex;
     justify-content: flex-end;

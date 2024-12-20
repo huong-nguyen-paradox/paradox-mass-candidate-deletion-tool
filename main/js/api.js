@@ -61,12 +61,18 @@ async function startUpdate() {
     const status = document.getElementById('status').value;
     const candidateIds = document.getElementById('candidateIds').value.split(',');
     const apiInstance = document.getElementById('apiInstance').value;
+    const requestTotal = candidateIds.length;
+    let requestCount = 0;
+    document.getElementById('output-progress').style.visibility = 'visible';
 
     try {
         const authToken = await getAuthToken(accountId, secretKey, apiInstance);
+        document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
         for (const candidateId of candidateIds) {
             const response = await updateStatus(status, candidateId.trim(), authToken, apiInstance);
             document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+            requestCount += 1;
+            document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
         }
     } catch (err) {
         if (typeof M !== 'undefined' && M.toast) {
@@ -83,12 +89,17 @@ async function startDeleteCandidates() {
     const secretKey = document.getElementById('secretKey').value;
     const candidateIds = document.getElementById('candidateIds').value.split(',');
     const apiInstance = document.getElementById('apiInstance').value;
+    const requestTotal = candidateIds.length;
+    let requestCount = 0;
+    document.getElementById('output-progress').style.visibility = 'visible';
 
     try {
         const authToken = await getAuthToken(accountId, secretKey, apiInstance);
         for (const candidateId of candidateIds) {
             const response = await deleteCandidate(candidateId.trim(), authToken, apiInstance);
             document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+            requestCount += 1;
+            document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
         }
     } catch (err) {
         console.error(err);
