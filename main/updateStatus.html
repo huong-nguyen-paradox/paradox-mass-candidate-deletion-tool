@@ -17,7 +17,9 @@
             <img src="/main/images/logo-paradox-olivia.png" alt="Paradox Logo" class="logo">
         </div>
     </header>
+    
     <div class="body-container">
+
         <div class="header-container">
             <div class="button-w-text">
                 <a class="btn-floating btn-large waves-effect waves-light paradox-primary-btn" href="/main/">
@@ -25,14 +27,15 @@
                 </a>
                 <p>Back</p>
             </div>
-            <h1 class="body-title">
-                Update Candidate Status
+            <h1>
+                Update Candidate Status Tool
             </h1>
         </div>
+
         <div class="row">
-            <div class="input-field col s12">
+            <div class="input-field col s6">
                 <select id="apiInstance">
-                    <option value="" disabled selected>Select Instance</option>
+                    <option value="" disabled selected>Select API Instance</option>
                     <option value="https://api.paradox.ai">PROD</option>
                     <option value="https://stgapi.paradox.ai">STG</option>
                     <option value="https://api.eu1.paradox.ai">EU PROD</option>
@@ -52,6 +55,7 @@
                 </select>
             </div>
         </div>
+
         <div class="row">
             <div class="input-field col s6">
                 <label for="accountId">Account ID:</label>
@@ -62,19 +66,21 @@
                 <input type="password" id="secretKey">
             </div>
         </div>
+
         <div class="row">
             <div class="input-field col s12">
                 <label for="status">Status:</label>
                 <input type="text" id="status">
             </div>
         </div>
+
         <div class="row">
                 <div class="input-field col s12">
                     <label for="candidateIds">Candidate IDs (comma-separated):</label>
                     <textarea id="candidateIds" class="materialize-textarea"></textarea>
                 </div>
             <div class="flex-container">
-                <div class="input-field col s12">
+                <div class="input-field col s12" style="margin-top: 0;">
                     <input type="file" id="csvFile" accept=".csv">
                 </div>
                     <button class="paradox-primary-btn grey-text text-lighten-5" onclick="uploadFile()">Upload</button>
@@ -86,6 +92,7 @@
                 </label>
             </div>
         </div>
+
         <div class="row">
             <button disabled class="paradox-primary-btn grey-text text-lighten-5 right" id="submit-btn"
                 onclick="startUpdate()">Update Status
@@ -101,6 +108,7 @@
         </div>
         
     </div>
+
     <script>
         M.AutoInit();
         let checkbox = document.getElementById('acknowledge');
@@ -110,6 +118,7 @@
             checked ? btn.removeAttribute('disabled') : btn.setAttribute('disabled', true)
         })
     </script>
+    
 </body>
 
 </html>

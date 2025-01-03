@@ -19,6 +19,7 @@ h1.paradox {
     align-items: center;
     justify-content: space-between;
     position: relative;
+    margin-bottom: 10px;
 }
 .header-container h1 {
     position: absolute;
