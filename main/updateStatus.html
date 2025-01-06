@@ -8,7 +8,8 @@
         href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
         rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="js/api.js"></script>
+    <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/main.js"></script>
 </head>
 
 <body>
@@ -17,7 +18,7 @@
         <div class="row">
             <div class="input-field col s12">
                 <select id="apiInstance">
-                    <option value="" disabled selected>Select Instance</option>
+                    <option value="" selected>Select Instance</option>
                     <option value="https://api.paradox.ai">PROD</option>
                     <option value="https://stgapi.paradox.ai">STG</option>
                     <option value="https://api.eu1.paradox.ai">EU PROD</option>
@@ -35,6 +36,7 @@
                     <option value="https://advantageapi.paradox.ai">ADVANTAGE PROD</option>
                     <option value="https://regisapi.paradox.ai">REGIS PROD</option>
                 </select>
+                <label>API Instance:</label>
             </div>
         </div>
         <div class="row">
@@ -47,24 +49,38 @@
                 <input type="password" id="secretKey">
             </div>
         </div>
-        <div class="row">
+        <!-- <div class="row">
             <div class="input-field col s12">
-                <label for="status">Status:</label>
-                <input type="text" id="status">
+                <select id="dataInput">
+                    <option value="" selected>Select Method</option>
+                    <option value="manual">Manual</option>
+                    <option value="fileUpload">File Upload</option>
+                </select>
+                <label>Candidate Data Input:</label>
             </div>
         </div>
+        <section id="manual-input" class="hide-section">
         <div class="row">
             <div class="input-field col s12">
                 <label for="candidateIds">Candidate IDs (comma-separated):</label>
                 <textarea id="candidateIds" class="materialize-textarea"></textarea>
             </div>
         </div>
+    </section> -->
+    <div class="row">
+        <div class="input-field col s12">
+            <label for="status">Status:</label>
+            <input type="text" id="status">
+        </div>
+    </div>
+    <section id="file-upload">
         <div class="row">
             <div class="input-field col s12">
                 <input type="file" id="csvFile" accept=".csv">
-                <button class="paradox-primary-btn grey-text text-lighten-5" onclick="uploadFile()">Upload</button>
+                <button disabled class="paradox-primary-btn grey-text text-lighten-5" id="upload-btn" onclick="api.uploadFile()">Upload</button>
             </div>
         </div>
+    </section>
         <div class="row">
             <label>
                 <input type="checkbox" id="acknowledge" />
@@ -73,23 +89,17 @@
         </div>
         <div class="row">
             <button disabled class="paradox-primary-btn grey-text text-lighten-5 right" id="submit-btn"
-                onclick="startUpdate()">Update Status
+                onclick="api.exeuteRequest('startUpdate')">Update Status
             </button>
         </div>
         <div id="output-progress" class="flex-left-right-container" style="display:none">
             <p>Requests Sent: <span id="count">0</span></p> 
-            <button id="stop" class="paradox-primary-btn grey-text text-lighten-5" onclick="stopRequest()">Stop</button>
+            <button id="stop" class="paradox-primary-btn grey-text text-lighten-5" onclick="api.stopRequest()">Stop</button>
         </div>
         <div id="output"></div>
     </div>
     <script>
         M.AutoInit();
-        let checkbox = document.getElementById('acknowledge');
-        let btn = document.getElementById('submit-btn');
-        checkbox.addEventListener('change', (e) => {
-            let { checked } = checkbox
-            checked ? btn.removeAttribute('disabled') : btn.setAttribute('disabled', true)
-        })
     </script>
 </body>
 

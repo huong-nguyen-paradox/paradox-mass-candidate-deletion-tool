@@ -1,11 +1,3 @@
-/* body {
-    font-family: Arial, sans-serif;
-    background-color: #282c34;
-    color: #abb2bf;
-    margin: 0;
-    padding: 20px;
-} */
-
 body,
 html {
     height: 100%;
@@ -126,9 +118,17 @@ input::file-selector-button {
 }
 
 .paradox-primary-btn {
-    background-color: #25c9d0
+    background-color: #25c9d0;
 }
 
 .paradox-primary-btn:hover {
     background-color: #51d4d9;
+}
+
+.hide-section {
+    display: none;
+}
+
+#csvFile {
+    cursor: pointer; 
 }
