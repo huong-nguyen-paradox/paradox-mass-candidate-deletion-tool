@@ -13,12 +13,30 @@
 </head>
 
 <body>
-    <div class="container">
-        <h1 class="grey-text text-darken-3">Update Candidate Status</h1>
+    <header id="app-header" class="app-header">
+        <div id="header-div" class="header-div">
+            <img src="/main/images/logo-paradox-olivia.png" alt="Paradox Logo" class="logo">
+        </div>
+    </header>
+    
+    <div class="body-container">
+
+        <div class="header-container">
+            <div class="button-w-text">
+                <a class="btn-floating btn-large waves-effect waves-light paradox-primary-btn" href="/main/">
+                    <i class="material-icons">navigate_before</i> 
+                </a>
+                <p>Back</p>
+            </div>
+            <h1>
+                Update Candidate Status Tool
+            </h1>
+        </div>
+
         <div class="row">
-            <div class="input-field col s12">
+            <div class="input-field col s6">
                 <select id="apiInstance">
-                    <option value="" selected>Select Instance</option>
+                    <option value="" disabled selected>Select API Instance</option>
                     <option value="https://api.paradox.ai">PROD</option>
                     <option value="https://stgapi.paradox.ai">STG</option>
                     <option value="https://api.eu1.paradox.ai">EU PROD</option>
@@ -39,6 +57,7 @@
                 <label>API Instance:</label>
             </div>
         </div>
+
         <div class="row">
             <div class="input-field col s6">
                 <label for="accountId">Account ID:</label>
@@ -49,58 +68,43 @@
                 <input type="password" id="secretKey">
             </div>
         </div>
-        <!-- <div class="row">
-            <div class="input-field col s12">
-                <select id="dataInput">
-                    <option value="" selected>Select Method</option>
-                    <option value="manual">Manual</option>
-                    <option value="fileUpload">File Upload</option>
-                </select>
-                <label>Candidate Data Input:</label>
-            </div>
-        </div>
-        <section id="manual-input" class="hide-section">
         <div class="row">
-            <div class="input-field col s12">
-                <label for="candidateIds">Candidate IDs (comma-separated):</label>
-                <textarea id="candidateIds" class="materialize-textarea"></textarea>
+                <div class="input-field col s12">
+                    <label for="status">Status:</label>
+                    <input type="text" id="status">
+                </div>
+            <div class="flex-container">
+                <div class="input-field col s12" style="margin-top: 0;">
+                    <input type="file" id="csvFile" accept=".csv">
+                </div>
+                    <button class="paradox-primary-btn grey-text text-lighten-5" onclick="api.uploadFile()">Upload</button>
             </div>
-        </div>
-    </section> -->
-    <div class="row">
-        <div class="input-field col s12">
-            <label for="status">Status:</label>
-            <input type="text" id="status">
-        </div>
-    </div>
-    <section id="file-upload">
-        <div class="row">
-            <div class="input-field col s12">
-                <input type="file" id="csvFile" accept=".csv">
-                <button disabled class="paradox-primary-btn grey-text text-lighten-5" id="upload-btn" onclick="api.uploadFile()">Upload</button>
+            <div class="check-box">
+                <label>
+                    <input type="checkbox" id="acknowledge" />
+                    <span>This list has been confirmed by the client<span class="red-text text-accent-4">*</span></span>
+                </label>
             </div>
-        </div>
-    </section>
-        <div class="row">
-            <label>
-                <input type="checkbox" id="acknowledge" />
-                <span>This list has been confirmed by the client<span class="red-text text-accent-4">*</span></span>
-            </label>
         </div>
         <div class="row">
             <button disabled class="paradox-primary-btn grey-text text-lighten-5 right" id="submit-btn"
                 onclick="api.exeuteRequest('startUpdate')">Update Status
             </button>
         </div>
-        <div id="output-progress" class="flex-left-right-container" style="display:none">
-            <p>Requests Sent: <span id="count">0</span></p> 
-            <button id="stop" class="paradox-primary-btn grey-text text-lighten-5" onclick="api.stopRequest()">Stop</button>
+        <div id="output-progress" class="output-container" style="display:none">
+            <div class="flex-container">
+                <p class="progress-text">Requests Sent: <span id="count">0</span></p> 
+                <button id="stop" class="paradox-primary-btn grey-text text-lighten-5" onclick="api.stopRequest()">Stop</button>
+            </div>
+            <div id="output"></div>
         </div>
-        <div id="output"></div>
+        
     </div>
+
     <script>
         M.AutoInit();
     </script>
+    
 </body>
 
 </html>

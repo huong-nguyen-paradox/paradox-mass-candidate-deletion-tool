@@ -1,3 +1,4 @@
+/* General Styles */
 body,
 html {
     height: 100%;
@@ -30,6 +31,97 @@ textarea {
     box-sizing: border-box;
 }
 
+input[type="text"]:focus,
+input[type="password"]:focus,
+textarea:focus {
+    border-bottom: 1px solid #25c9d0 !important;
+    box-shadow: 0 1px 0 0 #25c9d0 !important;
+}
+
+input::file-selector-button {
+    font-weight: bold;
+    color: #25c9d0;
+    padding: 0.5em;
+    border-radius: 5px;
+    background: transparent;
+    border: 0;
+}
+
+/* Header Styles */
+.app-header {
+    background-color: #ffffff;
+    padding: 20px;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    box-shadow: 0 4px 2px -2px gray;
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.header-container h1 {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    font-size: 8mm;
+    color: grey;
+}
+
+.div-img {
+    padding-left: 20px;
+}
+
+.logo {
+    height: 40px;
+}
+
+/* Body Styles */
+.body-container {
+    padding: 100px 20px 0;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.index-flex-container {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex: 1 0 auto;
+}
+
+.flex-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+}
+
+.output-container {
+    display: block;
+    padding: 5px;
+    border: 2px solid #ccc;
+}
+
+#output {
+    background-color: #7a7a7c;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 20px;
+    color: white;
+    overflow: auto;
+    overflow-wrap: break-word;
+}
+
+/* Button Styles */
 button {
     background-color: #61dafb;
     color: #282c34;
@@ -42,52 +134,45 @@ button {
     border-radius: 4px;
 }
 
-button[disabled]:hover {
-    background-color: #abb2bf
-}
-
 button:disabled {
     background-color: #abb2bf;
     cursor: default;
-    color: white
+    color: white;
 }
 
-input[type=text]:focus,
-input[type=password]:focus,
-textarea:focus {
-    border-bottom: 1px solid #25c9d0 !important;
-    box-shadow: 0 1px 0 0 #25c9d0 !important;
+button[disabled]:hover {
+    background-color: #abb2bf;
 }
 
-input::file-selector-button {
-    font-weight: bold;
-    color: #25c9d0;
-    padding: 0.5em;
-    border-radius: 5px;
-    background: transparent;
-    border: 0px solid black; 
-}
-
-#output {
-    background-color: #1c1f24;
-    padding: 15px;
-    border-radius: 4px;
-    margin-top: 20px;
-}
-
-.flex-container {
-    height: 100%;
+.button-w-text {
+    display: flex;
     align-items: center;
-    display: flex;
-    flex: 1 0 auto;
+    margin-right: auto;
 }
 
-.flex-left-right-container {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 5px; 
-    border: 1px solid #ccc; 
+.button-w-text p {
+    margin-left: 10px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.paradox-primary-btn {
+    background-color: #25c9d0;
+}
+
+.paradox-primary-btn:hover {
+    background-color: #51d4d9;
+}
+
+/* Miscellaneous Styles */
+.progress-text {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.check-box {
+    padding-left: 20px;
 }
 
 .custom {
@@ -123,6 +208,7 @@ input::file-selector-button {
 
 .paradox-primary-btn:hover {
     background-color: #51d4d9;
+    /* padding: 5px; */
 }
 
 .hide-section {

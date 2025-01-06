@@ -19,7 +19,9 @@ let action = document.getElementById('apiAction') || null;
 // let manualInput = document.getElementById('manual-input')
 // let candidateIds = document.getElementById('candidateIds');
 
-if (apiAction) {
+
+
+if (action) {
     action.addEventListener('change', (e) => {
         emitter.emit('clearData')
         fileUpload.value = ''
@@ -101,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fixedActionBtn.appendChild(anchor);
 
     // Append the btn to the container
-    const container = document.querySelector(".container");
+    const container = document.querySelector(".body-container");
     container.appendChild(fixedActionBtn);
 
     // Add Click Event to FAB

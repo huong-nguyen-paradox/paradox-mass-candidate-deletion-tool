@@ -86,7 +86,7 @@ async function startUpdate() {
     const apiInstance = document.getElementById('apiInstance').value;
     const requestTotal = candidateIds.length;
     let requestCount = 0;
-    document.getElementById('output-progress').style.display = 'flex';
+    document.getElementById('output-progress').style.display = 'block';
     document.getElementById('stop').disabled = false;
 
     try {
@@ -94,11 +94,11 @@ async function startUpdate() {
         abortController = new AbortController();
         const signal = abortController.signal;
         
-        for (const candidateId of candidateData) {
-            const response = await updateStatus(status, candidateId.trim(), authToken, apiInstance, signal);
-            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+        for (const candidateId of candidateIds) {
             requestCount += 1;
             document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
+            const response = await updateStatus(status, candidateId.trim(), authToken, apiInstance, signal);
+            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
         }
     } catch (err) {
         if (err.name === 'AbortError') {
@@ -119,18 +119,18 @@ async function deleteCandidates() {
     const apiInstance = document.getElementById('apiInstance').value;
     const requestTotal = candidateData.length;
     let requestCount = 0;
-    document.getElementById('output-progress').style.display = 'flex';
+    document.getElementById('output-progress').style.display = 'block';
     document.getElementById('stop').disabled = false;
 
     try {
         const authToken = await getAuthToken(accountId, secretKey, apiInstance);
         abortController = new AbortController();
         const signal = abortController.signal;
-        for (const candidateId of candidateData) {
-            const response = await deleteCandidate(candidateId.trim(), authToken, apiInstance, signal);
-            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+        for (const candidateId of candidateIds) {
             requestCount += 1;
             document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
+            const response = await deleteCandidate(candidateId.trim(), authToken, apiInstance, signal);
+            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
         }
     } catch (err) {
         if (err.name === 'AbortError') {
@@ -218,6 +218,7 @@ function getFunctions () {
         createCandidates,
         startUpdate,
         deleteCandidates,
+        stopRequest
     }
 }
 
