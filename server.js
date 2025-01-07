@@ -3,11 +3,9 @@ import fetch from 'node-fetch';
 import bodyParser from 'body-parser';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import multer from 'multer';
-import csvParser from 'csv-parser';
-import fs from 'fs';
 import errorHandler from './errorHandler.js';
 import AbortController from 'abort-controller';
+import { upload, processCSV } from './csvParser.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -47,19 +45,22 @@ app.post('/auth/token', async (req, res, next) => {
     }
 });
 
-const upload = multer({ dest: 'uploads/' });
 
-app.post('/upload', upload.single('file'), (req, res) => {
-    const results = [];
-    const columnName = 'long_id';
+app.post('/upload', upload.single('file'), processCSV, async (req, res) => {
+    // const results = [];
+    // const columnName = 'long_id';
 
-    fs.createReadStream(req.file.path)
-        .pipe(csvParser())
-        .on('data', (data) => results.push(data[columnName]))
-        .on('end', () => {
-            fs.unlinkSync(req.file.path);
-            res.json(results);
-        });
+    const parsedData = req.parsedCSV;
+    // const matchedFieldSet = req.matchedFieldSet;
+
+    console.log("Parsed DATA:", parsedData);
+    
+
+    res.send({
+        success: true,
+        message: `File successfully uploaded.`,
+        data: parsedData
+    });
 });
 
 app.post('/update-status/:id', async (req, res, next) => {
@@ -100,7 +101,34 @@ app.delete('/delete-candidate/:id', async (req, res, next) => {
             headers: { 'Authorization': authToken }
         });
         const data = await response.json();
-        return res.send(data);
+        if (data.errors) {
+            const err = new Error(data.errors[0].message);
+            throw err;
+        } else {
+            return res.send(data);
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
+app.post('/create-candidate', async (req, res, next) => {
+    const authToken = req.headers.authorization;
+    const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
+
+    try {
+        const response = await fetch(`${apiInstance}/api/v1/public/candidates`, {
+            method: 'POST',
+            headers: { 'Authorization': authToken,  'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        const data = await response.json();
+        if (data.errors) {
+            const err = new Error(data.errors[0].message);
+            throw err;
+        } else {
+            return res.send(data);
+        }
     } catch (err) {
         return next(err);
     }

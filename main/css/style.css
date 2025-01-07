@@ -199,5 +199,22 @@ button[disabled]:hover {
 .bordered {
     border: 2.5px solid;
     border-radius: 50px;
-    padding: 5px;
+    padding: 5px
+}
+
+.paradox-primary-btn {
+    background-color: #25c9d0;
+}
+
+.paradox-primary-btn:hover {
+    background-color: #51d4d9;
+    /* padding: 5px; */
+}
+
+.hide-section {
+    display: none;
+}
+
+#csvFile {
+    cursor: pointer; 
 }
