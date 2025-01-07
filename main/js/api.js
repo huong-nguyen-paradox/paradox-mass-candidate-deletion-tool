@@ -23,7 +23,7 @@ async function getAuthToken(accountId, secretKey, apiInstance) {
         const data = await response.json();
         return data.access_token;
     } catch (err) {
-        showMessage(err);
+        throw err;
     }
 }
 
@@ -40,7 +40,7 @@ async function updateStatus(status, candidateId, authToken, apiInstance, signal)
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(`HTTP error! status: ${response.status} - ${error.message}`);
+            throw new Error(`${candidateId}: ${response.status} - ${error.message}`);
         }
         return await response.json();
     } catch (err) {
@@ -57,24 +57,34 @@ async function deleteCandidate(candidateId, authToken, apiInstance, signal) {
             }, 
             signal: signal 
         });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`${candidateId}: ${response.status} - ${error.message}`);
+        }
         return await response.json();
     } catch (error) {
-        return { error: error.message };
+        throw error;
     }
 }
 
-async function createCandidate(candidateData, authToken, apiInstance) {
+async function createCandidate(candidateData, authToken, apiInstance, signal) {
     try {
         const response = await fetch(`/create-candidate?apiInstance=${encodeURIComponent(apiInstance)}`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${authToken}`
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
             },
-            body: candidateData
+            body: JSON.stringify(candidateData),
+            signal: signal
         });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`${candidateData.name}: ${response.status} - ${error.message}`);
+        }
         return await response.json();
     } catch (error) {
-        return { error: error.message };
+        throw error;
     }
 }
 
@@ -82,7 +92,6 @@ async function startUpdate() {
     const accountId = document.getElementById('accountId').value;
     const secretKey = document.getElementById('secretKey').value;
     const status = document.getElementById('status').value;
-    // const candidateIds = document.getElementById('candidateIds').value.split(',');
     const apiInstance = document.getElementById('apiInstance').value;
     const requestTotal = candidateIds.length;
     let requestCount = 0;
@@ -100,6 +109,7 @@ async function startUpdate() {
             const response = await updateStatus(status, candidateId.trim(), authToken, apiInstance, signal);
             document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
         }
+        showMessage('Task Complete', 'Success')
     } catch (err) {
         if (err.name === 'AbortError') {
             document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
@@ -126,23 +136,23 @@ async function deleteCandidates() {
         const authToken = await getAuthToken(accountId, secretKey, apiInstance);
         abortController = new AbortController();
         const signal = abortController.signal;
-        for (const candidateId of candidateIds) {
+        for (const candidateId of candidateData) {
             requestCount += 1;
             document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
             const response = await deleteCandidate(candidateId.trim(), authToken, apiInstance, signal);
             document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
         }
+        showMessage('Task Complete', 'Success')
     } catch (err) {
         if (err.name === 'AbortError') {
             document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
+
         }
-        console.error(err);
-        return;
+        showMessage(err);
     }
 }
 
 async function createCandidates() {
-    console.log("Here");
     const accountId = document.getElementById('accountId').value;
     const secretKey = document.getElementById('secretKey').value;
     const apiInstance = document.getElementById('apiInstance').value;
@@ -157,15 +167,18 @@ async function createCandidates() {
         const signal = abortController.signal;
         for (const candidate of candidateData) {
             const response = await createCandidate(candidate, authToken, apiInstance, signal);
-            document.getElementById('output').innerHTML += `<p>Candidate ${candidate}: ${JSON.stringify(response)}</p>`;
+            const {name, email, OID} = response.candidate
+            document.getElementById('output').innerHTML += `<p>Candidate ${name}: ${OID} - ${email}</p>`;
             requestCount += 1;
             document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
         }
+        showMessage('Task Complete', 'Success')
     } catch (err) {
         if (err.name === 'AbortError') {
             document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
         }
-        console.error(err);
+        const { message } = err
+        showMessage(message);
         return;
     }
 }
@@ -190,10 +203,10 @@ export async function uploadFile() {
             throw new Error(resp.message);
         }
         candidateData.push(...resp.data);
-        console.log(candidateData)
-        showMessage(resp, "success")
+        showMessage(resp.message, "success")
     } catch (error) {
-        return showMessage(error);
+        const {message} = error
+        return showMessage(message);
     }
 }
 
@@ -205,11 +218,10 @@ function stopRequest() {
     }
 }
 
-function showMessage(resp, type = "error") {
-    console.log(resp)
+function showMessage(message, type = "error") {
     const classname = (type === 'success') ? "green" : "red"
     if (typeof M !== 'undefined' && M.toast) {
-        M.toast({ html: resp.message, classes: classname });
+        M.toast({ html: message, classes: classname });
     }
 }
 
@@ -218,7 +230,6 @@ function getFunctions () {
         createCandidates,
         startUpdate,
         deleteCandidates,
-        stopRequest
     }
 }
 

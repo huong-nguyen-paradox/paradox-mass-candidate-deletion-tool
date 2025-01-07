@@ -101,7 +101,12 @@ app.delete('/delete-candidate/:id', async (req, res, next) => {
             headers: { 'Authorization': authToken }
         });
         const data = await response.json();
-        return res.send(data);
+        if (data.errors) {
+            const err = new Error(data.errors[0].message);
+            throw err;
+        } else {
+            return res.send(data);
+        }
     } catch (err) {
         return next(err);
     }
@@ -114,11 +119,16 @@ app.post('/create-candidate', async (req, res, next) => {
     try {
         const response = await fetch(`${apiInstance}/api/v1/public/candidates`, {
             method: 'POST',
-            headers: { 'Authorization': authToken },
+            headers: { 'Authorization': authToken,  'Content-Type': 'application/json' },
             body: JSON.stringify(req.body)
         });
         const data = await response.json();
-        return res.send(data);
+        if (data.errors) {
+            const err = new Error(data.errors[0].message);
+            throw err;
+        } else {
+            return res.send(data);
+        }
     } catch (err) {
         return next(err);
     }
