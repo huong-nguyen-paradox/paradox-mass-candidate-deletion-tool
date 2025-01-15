@@ -1,5 +1,8 @@
+import emitter from "./event.js";
+
 // Global Variables
 let abortController = null; // Used to stop fetch requests
+let candidateData = []; // store candidate data to be used in calls to Olivia API
 
 async function getAuthToken(accountId, secretKey, apiInstance) {
     const params = new URLSearchParams();
@@ -37,7 +40,7 @@ async function updateStatus(status, candidateId, authToken, apiInstance, signal)
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(`HTTP error! status: ${response.status} - ${error.message}`);
+            throw new Error(`${candidateId}: ${response.status} - ${error.message}`);
         }
         return await response.json();
     } catch (err) {
@@ -54,9 +57,34 @@ async function deleteCandidate(candidateId, authToken, apiInstance, signal) {
             }, 
             signal: signal 
         });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`${candidateId}: ${response.status} - ${error.message}`);
+        }
         return await response.json();
     } catch (error) {
-        return { error: error.message };
+        throw error;
+    }
+}
+
+async function createCandidate(candidateData, authToken, apiInstance, signal) {
+    try {
+        const response = await fetch(`/create-candidate?apiInstance=${encodeURIComponent(apiInstance)}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(candidateData),
+            signal: signal
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`${candidateData.name}: ${response.status} - ${error.message}`);
+        }
+        return await response.json();
+    } catch (error) {
+        throw error;
     }
 }
 
@@ -64,11 +92,10 @@ async function startUpdate() {
     const accountId = document.getElementById('accountId').value;
     const secretKey = document.getElementById('secretKey').value;
     const status = document.getElementById('status').value;
-    const candidateIds = document.getElementById('candidateIds').value.split(',');
     const apiInstance = document.getElementById('apiInstance').value;
-    const requestTotal = candidateIds.length;
+    const requestTotal = candidateData.length;
     let requestCount = 0;
-    document.getElementById('output-progress').style.display = 'flex';
+    document.getElementById('output-progress').style.display = 'block';
     document.getElementById('stop').disabled = false;
 
     try {
@@ -76,12 +103,13 @@ async function startUpdate() {
         abortController = new AbortController();
         const signal = abortController.signal;
         
-        for (const candidateId of candidateIds) {
-            const response = await updateStatus(status, candidateId.trim(), authToken, apiInstance, signal);
-            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+        for (const candidateId of candidateData) {
             requestCount += 1;
             document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
+            const response = await updateStatus(status, candidateId.trim(), authToken, apiInstance, signal);
+            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
         }
+        showMessage('Task Complete', 'success')
     } catch (err) {
         if (err.name === 'AbortError') {
             document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
@@ -95,12 +123,40 @@ async function startUpdate() {
     }
 }
 
-async function startDeleteCandidates() {
+async function deleteCandidates() {
     const accountId = document.getElementById('accountId').value;
     const secretKey = document.getElementById('secretKey').value;
-    const candidateIds = document.getElementById('candidateIds').value.split(',');
     const apiInstance = document.getElementById('apiInstance').value;
-    const requestTotal = candidateIds.length;
+    const requestTotal = candidateData.length;
+    let requestCount = 0;
+    document.getElementById('output-progress').style.display = 'block';
+    document.getElementById('stop').disabled = false;
+
+    try {
+        const authToken = await getAuthToken(accountId, secretKey, apiInstance);
+        abortController = new AbortController();
+        const signal = abortController.signal;
+        for (const candidateId of candidateData) {
+            requestCount += 1;
+            document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
+            const response = await deleteCandidate(candidateId.trim(), authToken, apiInstance, signal);
+            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+        }
+        showMessage('Task Complete', 'success')
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
+
+        }
+        showMessage(err);
+    }
+}
+
+async function createCandidates() {
+    const accountId = document.getElementById('accountId').value;
+    const secretKey = document.getElementById('secretKey').value;
+    const apiInstance = document.getElementById('apiInstance').value;
+    const requestTotal = candidateData.length;
     let requestCount = 0;
     document.getElementById('output-progress').style.display = 'flex';
     document.getElementById('stop').disabled = false;
@@ -109,22 +165,28 @@ async function startDeleteCandidates() {
         const authToken = await getAuthToken(accountId, secretKey, apiInstance);
         abortController = new AbortController();
         const signal = abortController.signal;
-        for (const candidateId of candidateIds) {
-            const response = await deleteCandidate(candidateId.trim(), authToken, apiInstance, signal);
-            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+        for (const candidate of candidateData) {
+            const response = await createCandidate(candidate, authToken, apiInstance, signal);
+            const {name, email, OID} = response.candidate
+            document.getElementById('output').innerHTML += `<p>Candidate ${name}: ${OID} - ${email}</p>`;
             requestCount += 1;
             document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
         }
+        showMessage('Task Complete', 'success')
     } catch (err) {
         if (err.name === 'AbortError') {
             document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
         }
-        console.error(err);
+        const { message } = err
+        showMessage(message);
         return;
     }
 }
 
-async function uploadFile() {
+export async function uploadFile() {
+    if(candidateData.length !== 0 ) {
+        emitter.emit('clearData');
+    } 
     const fileInput = document.getElementById('csvFile');
     const file = fileInput.files[0];
 
@@ -136,11 +198,15 @@ async function uploadFile() {
             method: 'POST',
             body: formData,
         });
-        const columnData = await response.json();
-        let area = document.getElementById('candidateIds');
-        area.value = columnData.join(', ');
+        const resp = await response.json();
+        if(!resp.success) {
+            throw new Error(resp.message);
+        }
+        candidateData.push(...resp.data);
+        showMessage(resp.message, "success")
     } catch (error) {
-        console.error('Error:', error);
+        const {message} = error
+        return showMessage(message);
     }
 }
 
@@ -151,3 +217,39 @@ function stopRequest() {
         document.getElementById('stop').disabled = true;
     }
 }
+
+function showMessage(message, type = "error") {
+    const classname = (type === 'success') ? "green" : "red"
+    if (typeof M !== 'undefined' && M.toast) {
+        M.toast({ html: message, classes: classname });
+    }
+}
+
+function getFunctions () {
+    return {
+        createCandidates,
+        startUpdate,
+        deleteCandidates,
+    }
+}
+
+function executeRequest(key) {
+    const functions = getFunctions();
+    if (functions[key]) {
+        return functions[key]();
+      } else {
+        throw new Error(`Function with key "${key}" does not exist.`);
+      }
+}
+
+// Attach functions to the global `window` object
+window.api = {
+    executeRequest,
+    stopRequest,
+    uploadFile
+};
+
+emitter.on('clearData', () => {
+    candidateData.length = 0; // Clear the array
+    console.log('Data cleared:', candidateData); // Call clearData when the event is emitted
+});

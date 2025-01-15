@@ -8,16 +8,35 @@
         href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
         rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="js/api.js"></script>
+    <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/main.js"></script>
 </head>
 
 <body>
-    <div class="container">
-        <h1 class="grey-text text-darken-3">Update Candidate Status</h1>
+    <header id="app-header" class="app-header">
+        <div id="header-div" class="header-div">
+            <img src="/main/images/logo-paradox-olivia.png" alt="Paradox Logo" class="logo">
+        </div>
+    </header>
+    
+    <div class="body-container">
+
+        <div class="header-container">
+            <div class="button-w-text">
+                <a class="btn-floating btn-large waves-effect waves-light paradox-primary-btn" href="/main/">
+                    <i class="material-icons">navigate_before</i> 
+                </a>
+                <p>Back</p>
+            </div>
+            <h1>
+                Update Candidate Status Tool
+            </h1>
+        </div>
+
         <div class="row">
-            <div class="input-field col s12">
+            <div class="input-field col s6">
                 <select id="apiInstance">
-                    <option value="" disabled selected>Select Instance</option>
+                    <option value="" disabled selected>Select API Instance</option>
                     <option value="https://api.paradox.ai">PROD</option>
                     <option value="https://stgapi.paradox.ai">STG</option>
                     <option value="https://api.eu1.paradox.ai">EU PROD</option>
@@ -35,8 +54,10 @@
                     <option value="https://advantageapi.paradox.ai">ADVANTAGE PROD</option>
                     <option value="https://regisapi.paradox.ai">REGIS PROD</option>
                 </select>
+                <label>API Instance:</label>
             </div>
         </div>
+
         <div class="row">
             <div class="input-field col s6">
                 <label for="accountId">Account ID:</label>
@@ -48,49 +69,42 @@
             </div>
         </div>
         <div class="row">
-            <div class="input-field col s12">
-                <label for="status">Status:</label>
-                <input type="text" id="status">
+                <div class="input-field col s12">
+                    <label for="status">Status:</label>
+                    <input type="text" id="status">
+                </div>
+            <div class="flex-container">
+                <div class="input-field col s12" style="margin-top: 0;">
+                    <input type="file" id="csvFile" accept=".csv">
+                </div>
+                    <button class="paradox-primary-btn grey-text text-lighten-5" onclick="api.uploadFile()">Upload</button>
             </div>
-        </div>
-        <div class="row">
-            <div class="input-field col s12">
-                <label for="candidateIds">Candidate IDs (comma-separated):</label>
-                <textarea id="candidateIds" class="materialize-textarea"></textarea>
+            <div class="check-box">
+                <label>
+                    <input type="checkbox" id="acknowledge" />
+                    <span>This list has been confirmed by the client<span class="red-text text-accent-4">*</span></span>
+                </label>
             </div>
-        </div>
-        <div class="row">
-            <div class="input-field col s12">
-                <input type="file" id="csvFile" accept=".csv">
-                <button class="paradox-primary-btn grey-text text-lighten-5" onclick="uploadFile()">Upload</button>
-            </div>
-        </div>
-        <div class="row">
-            <label>
-                <input type="checkbox" id="acknowledge" />
-                <span>This list has been confirmed by the client<span class="red-text text-accent-4">*</span></span>
-            </label>
         </div>
         <div class="row">
             <button disabled class="paradox-primary-btn grey-text text-lighten-5 right" id="submit-btn"
-                onclick="startUpdate()">Update Status
+                onclick="api.executeRequest('startUpdate')">Update Status
             </button>
         </div>
-        <div id="output-progress" class="flex-left-right-container" style="display:none">
-            <p>Requests Sent: <span id="count">0</span></p> 
-            <button id="stop" class="paradox-primary-btn grey-text text-lighten-5" onclick="stopRequest()">Stop</button>
+        <div id="output-progress" class="output-container" style="display:none">
+            <div class="flex-container">
+                <p class="progress-text">Requests Sent: <span id="count">0</span></p> 
+                <button id="stop" class="paradox-primary-btn grey-text text-lighten-5" onclick="api.stopRequest()">Stop</button>
+            </div>
+            <div id="output"></div>
         </div>
-        <div id="output"></div>
+        
     </div>
+
     <script>
         M.AutoInit();
-        let checkbox = document.getElementById('acknowledge');
-        let btn = document.getElementById('submit-btn');
-        checkbox.addEventListener('change', (e) => {
-            let { checked } = checkbox
-            checked ? btn.removeAttribute('disabled') : btn.setAttribute('disabled', true)
-        })
     </script>
+    
 </body>
 
 </html>
