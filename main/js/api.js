@@ -27,6 +27,20 @@ async function getAuthToken(accountId, secretKey, apiInstance) {
     }
 }
 
+// try logging output into a file
+
+console.log('here (w logRequets and logFile)')
+const logFile = path.join(__dirname, 'mass_update_api_requests_log.txt') // create a log file
+
+// function that appends requests to the log file
+async function logRequest() { // method, url, status, data = null) {
+    console.log('in logRequest')
+    // const logData = '${new Date().toISOString()} - ${method} ${url} - Status: ${status}\n';
+    // fs.appendFile(logFile, logData, (err) => {
+    //     if (err) console.error('Error logging request:', err);
+    // })
+}
+
 async function updateStatus(status, candidateId, authToken, apiInstance, signal) {
     try {
         const response = await fetch(`/update-status/${candidateId}?apiInstance=${encodeURIComponent(apiInstance)}`, {
@@ -38,8 +52,14 @@ async function updateStatus(status, candidateId, authToken, apiInstance, signal)
             body: JSON.stringify({ "candidate_journey_status": status }),
             signal: signal // Attach the abort signal to the fetch request
         });
+        // log the request
+        logRequest('GET', url, response.status);
+        console.log('API Response:', data)
         if (!response.ok) {
             const error = await response.json();
+            // log the request
+            logRequest('GET', url, response.status);
+            console.log('!API Response:', data)
             throw new Error(`${candidateId}: ${response.status} - ${error.message}`);
         }
         return await response.json();
@@ -89,6 +109,7 @@ async function createCandidate(candidateData, authToken, apiInstance, signal) {
 }
 
 async function startUpdate() {
+    console.log('get to console')
     const accountId = document.getElementById('accountId').value;
     const secretKey = document.getElementById('secretKey').value;
     const status = document.getElementById('status').value;
@@ -100,6 +121,7 @@ async function startUpdate() {
 
     try {
         const authToken = await getAuthToken(accountId, secretKey, apiInstance);
+        console.log('done getAuthToken')
         abortController = new AbortController();
         const signal = abortController.signal;
         

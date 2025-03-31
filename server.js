@@ -2,6 +2,7 @@ import express from 'express';
 import fetch from 'node-fetch';
 import bodyParser from 'body-parser';
 import path, { dirname } from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import errorHandler from './errorHandler.js';
 import AbortController from 'abort-controller';
