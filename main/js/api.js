@@ -27,20 +27,20 @@ async function getAuthToken(accountId, secretKey, apiInstance) {
     }
 }
 
-async function updateStatus(status, candidateId, authToken, apiInstance, signal) {
-    try {
-        const response = await fetch(`/update-status/${candidateId}?apiInstance=${encodeURIComponent(apiInstance)}`, {
+async function updateStatus(candidate, authToken, apiInstance, signal) {
+    try {                                              // TODO: pull candidateID from candidate
+        const response = await fetch(`/update-status/${candidate.long_id}?apiInstance=${encodeURIComponent(apiInstance)}`, {
             method: "POST",
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ "candidate_journey_status": status }),
+            body: JSON.stringify({"candidate_journey_status": candidate.candidate_journey_status}),
             signal: signal // Attach the abort signal to the fetch request
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(`${candidateId}: ${response.status} - ${error.message}`);
+            throw new Error(`${candidate}: ${response.status} - ${error.message}`);
         }
         return await response.json();
     } catch (err) {
@@ -91,7 +91,7 @@ async function createCandidate(candidateData, authToken, apiInstance, signal) {
 async function startUpdate() {
     const accountId = document.getElementById('accountId').value;
     const secretKey = document.getElementById('secretKey').value;
-    const status = document.getElementById('status').value;
+    // const status = document.getElementById('status').value;
     const apiInstance = document.getElementById('apiInstance').value;
     const requestTotal = candidateData.length;
     let requestCount = 0;
@@ -103,11 +103,11 @@ async function startUpdate() {
         abortController = new AbortController();
         const signal = abortController.signal;
         
-        for (const candidateId of candidateData) {
+        for (const candidate of candidateData) {
             requestCount += 1;
             document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
-            const response = await updateStatus(status, candidateId.trim(), authToken, apiInstance, signal);
-            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
+            const response = await updateStatus(candidate, authToken, apiInstance, signal);
+            document.getElementById('output').innerHTML += `<p>Candidate ${candidate.long_id}: ${JSON.stringify(response)}</p>`; //TODO: concat candidateID
         }
         showMessage('Task Complete', 'success')
     } catch (err) {
@@ -158,19 +158,20 @@ async function createCandidates() {
     const apiInstance = document.getElementById('apiInstance').value;
     const requestTotal = candidateData.length;
     let requestCount = 0;
-    document.getElementById('output-progress').style.display = 'flex';
+    document.getElementById('output-progress').style.display = 'block';
     document.getElementById('stop').disabled = false;
 
     try {
         const authToken = await getAuthToken(accountId, secretKey, apiInstance);
         abortController = new AbortController();
         const signal = abortController.signal;
+
         for (const candidate of candidateData) {
+            requestCount += 1;
+            document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
             const response = await createCandidate(candidate, authToken, apiInstance, signal);
             const {name, email, OID} = response.candidate
             document.getElementById('output').innerHTML += `<p>Candidate ${name}: ${OID} - ${email}</p>`;
-            requestCount += 1;
-            document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
         }
         showMessage('Task Complete', 'success')
     } catch (err) {

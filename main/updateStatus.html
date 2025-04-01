@@ -69,10 +69,7 @@
             </div>
         </div>
         <div class="row">
-                <div class="input-field col s12">
-                    <label for="status">Status:</label>
-                    <input type="text" id="status">
-                </div>
+
             <div class="flex-container">
                 <div class="input-field col s12" style="margin-top: 0;">
                     <input type="file" id="csvFile" accept=".csv">
@@ -86,15 +83,18 @@
                 </label>
             </div>
         </div>
+
         <div class="row">
             <button disabled class="paradox-primary-btn grey-text text-lighten-5 right" id="submit-btn"
                 onclick="api.executeRequest('startUpdate')">Update Status
             </button>
         </div>
+
         <div id="output-progress" class="output-container" style="display:none">
             <div class="flex-container">
                 <p class="progress-text">Requests Sent: <span id="count">0</span></p> 
-                <button id="stop" class="paradox-primary-btn grey-text text-lighten-5" onclick="api.stopRequest()">Stop</button>
+                <button id="stop" class="paradox-primary-btn grey-text text-lighten-5" 
+                    onclick="api.stopRequest()">Stop</button>
             </div>
             <div id="output"></div>
         </div>

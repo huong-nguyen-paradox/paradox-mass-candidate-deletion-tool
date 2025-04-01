@@ -5,7 +5,8 @@ import csvParser from 'csv-parser';
 const upload = multer({ dest: 'uploads/' });
 
 const predefinedFields = {
-    default: ['long_id'],
+    update: ['long_id', 'candidate_journey_status'],
+    delete: ['long_id'],
     create: ['name', 'email', 'phone'],
 };
 

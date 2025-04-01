@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </tr>
                 <tr>
                     <td>Update Status</td>
-                    <td>long_id</td>
+                    <td>long_id, candidate_journey_status</td>
                 </tr>
                 <tr>
                     <td>Delete</td>
