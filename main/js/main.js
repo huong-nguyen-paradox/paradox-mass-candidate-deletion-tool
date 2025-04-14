@@ -11,6 +11,7 @@ let fileUpload = document.getElementById('csvFile');
 let uploadButton = document.getElementById('upload-btn');
 let checkbox = document.getElementById('acknowledge');
 let submitBtn = document.getElementById('submit-btn');
+if (submitBtn) submitBtn.removeAttribute('disabled');
 let action = document.getElementById('apiAction') || null;
 // let inputType = document.getElementById('dataInput');
 // let createSection = document.getElementById('create');

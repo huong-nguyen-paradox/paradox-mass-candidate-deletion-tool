@@ -88,6 +88,57 @@ async function createCandidate(candidateData, authToken, apiInstance, signal) {
     }
 }
 
+async function updateCandidateAttributes() {
+    const accountId = document.getElementById('accountId').value;
+    const secretKey = document.getElementById('secretKey').value;
+    const attribute = document.getElementById('attribute').value;
+    const apiInstance = document.getElementById('apiInstance').value;
+
+    const authToken = await getAuthToken(accountId, secretKey, apiInstance);
+    
+    const payload = {
+        attribute: attribute,
+        data: candidateData
+    };
+
+    const response = await fetch(`/update-candidate-attribute?apiInstance=${encodeURIComponent(apiInstance)}`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Account-ID': accountId,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    const results = data.results || [];
+
+    const requestTotal = results.length;
+    let requestCount = 0;
+
+    document.getElementById('output-progress').style.display = 'block';
+    document.getElementById('stop').disabled = false;
+    document.getElementById('output').innerHTML = '';
+    document.getElementById('count').innerHTML = `0 / ${requestTotal}`;
+
+    for (const result of results) {
+        requestCount += 1;
+
+        const p = document.createElement('p');
+        if (result.status === 'Success') {
+            p.innerHTML = `<span class="green-text">✅ ${result.candidateId}: ${result.attribute} → ${result.value}</span>`;
+        } else {
+            p.innerHTML = `<span class="red-text">⚠️ ${result.candidateId || '[no ID]'}: ${result.status} — ${result.value || '[no value]'}</span>`;
+        }
+
+        document.getElementById('output').appendChild(p);
+        document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
+    }
+
+    showMessage('Task Complete', 'success');
+}
+
 async function startUpdate() {
     const accountId = document.getElementById('accountId').value;
     const secretKey = document.getElementById('secretKey').value;
@@ -189,9 +240,11 @@ export async function uploadFile() {
     } 
     const fileInput = document.getElementById('csvFile');
     const file = fileInput.files[0];
+    const attribute = document.getElementById('attribute')?.value?.trim();
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('attribute', attribute);
 
     try {
         const response = await fetch('/upload', {
@@ -230,6 +283,7 @@ function getFunctions () {
         createCandidates,
         startUpdate,
         deleteCandidates,
+        updateCandidateAttributes,
     }
 }
 

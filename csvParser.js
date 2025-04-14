@@ -7,6 +7,7 @@ const upload = multer({ dest: 'uploads/' });
 const predefinedFields = {
     default: ['long_id'],
     create: ['name', 'email', 'phone'],
+    attributeUpdate: []
 };
 
 const processCSV = (req, res, next) => {
@@ -15,44 +16,77 @@ const processCSV = (req, res, next) => {
     }
 
     const results = [];
-    const matchedFieldSet = []
+    const matchedFieldSet = [];
 
     const stream = fs.createReadStream(req.file.path).pipe(csvParser());
+
     stream
         .on('headers', (headers) => {
+            headers = headers.map(h => h.trim());
 
-            const matchingSet = Object.entries(predefinedFields).find(([_,fields]) =>
-                fields.every(field => headers.includes(field))
-            );
+            const dynamicAttribute = req.body.attribute?.toString().trim();
+            console.log('Headers:', headers);
+            console.log('Attribute:', dynamicAttribute);
+
+            let matchingSet;
+
+            if (dynamicAttribute && headers.includes('long_id') && headers.includes(dynamicAttribute)) {
+                matchingSet = ['attributeUpdate', ['long_id', dynamicAttribute]];
+            }
 
             if (!matchingSet) {
-                // Validation failed
+                matchingSet = Object.entries(predefinedFields).find(([_, fields]) =>
+                    fields.every(field => headers.includes(field))
+                );
+            }
+
+            if (!matchingSet) {
                 stream.destroy();
-                return next(new Error('Uploaded CSV does not match any predefined field structure. See docs for more details.'));
+                const dynamicMsg = dynamicAttribute
+                    ? `CSV must include "long_id" and "${dynamicAttribute}" columns for attribute update.`
+                    : 'Uploaded CSV does not match any predefined field structure.';
+                return next(new Error(dynamicMsg));
             }
 
             matchedFieldSet.push(...matchingSet);
+            console.log('Matched field set:', matchedFieldSet);
         })
+
         .on('data', (data) => {
-            matchedFieldSet[0] === 'default' ? results.push(data['long_id']) : results.push(data);
-        })
-        .on('end', () => {
-            // Clean up after ourselves
-            fs.unlinkSync(req.file.path);
+            if (!data) return;
 
-            req.parsedCSV = results;
-
-            next(); // Send results back
-        })
-        .on('error', (err) => {
-            console.error(`Stream Error: ${err.message}`);
-            if (req.file && req.file.path) {
-                fs.unlinkSync(req.file.path); // Cleanup file
+            const mode = matchedFieldSet[0];
+            if (mode === 'default') {
+                const id = data['long_id'];
+                if (id) results.push(id);
+            } else if (mode === 'attributeUpdate') {
+                const cleanedRow = {};
+                for (const key in data) {
+                    const trimmedKey = key.trim();
+                    cleanedRow[trimmedKey] = data[key]?.toString().trim();
+                }
+                results.push(cleanedRow);
+            } else {
+                results.push(data); // fallback
             }
-            next(err); // Pass error to the error handler
-        });
-};
+        })
 
+
+    .on('end', () => {
+        fs.unlinkSync(req.file.path); // Clean up file
+        req.parsedCSV = results;
+        console.log('Parsed DATA:', results); // debug
+        next();
+    })
+
+    .on('error', (err) => {
+        console.error(`Stream Error: ${err.message}`);
+        if (req.file && req.file.path) {
+            fs.unlinkSync(req.file.path);
+        }
+        next(err);
+    });
+};
 
 export {
     upload,

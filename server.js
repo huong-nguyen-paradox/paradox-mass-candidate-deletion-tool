@@ -45,17 +45,10 @@ app.post('/auth/token', async (req, res, next) => {
     }
 });
 
-
-app.post('/upload', upload.single('file'), processCSV, async (req, res) => {
-    // const results = [];
-    // const columnName = 'long_id';
-
+app.post('/upload', upload.single('file'), (req, res, next) => {
+    processCSV(req, res, next);
+}, (req, res) => {
     const parsedData = req.parsedCSV;
-    // const matchedFieldSet = req.matchedFieldSet;
-
-    console.log("Parsed DATA:", parsedData);
-    
-
     res.send({
         success: true,
         message: `File successfully uploaded.`,
@@ -68,7 +61,7 @@ app.post('/update-status/:id', async (req, res, next) => {
     const candidateId = req.params.id;
     const { candidate_journey_status } = req.body;
     const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
-    
+
     try {
         const response = await fetch(`${apiInstance}/api/v1/public/candidates/${candidateId}`, {
             method: 'PUT',
@@ -119,7 +112,7 @@ app.post('/create-candidate', async (req, res, next) => {
     try {
         const response = await fetch(`${apiInstance}/api/v1/public/candidates`, {
             method: 'POST',
-            headers: { 'Authorization': authToken,  'Content-Type': 'application/json' },
+            headers: { 'Authorization': authToken, 'Content-Type': 'application/json' },
             body: JSON.stringify(req.body)
         });
         const data = await response.json();
@@ -132,6 +125,45 @@ app.post('/create-candidate', async (req, res, next) => {
     } catch (err) {
         return next(err);
     }
+});
+
+app.post('/update-candidate-attribute', async (req, res, next) => {
+    const authToken = req.headers.authorization;
+    const accountId = req.headers['account-id'];
+    const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
+    const { attribute } = req.body;
+    const candidates = req.body.data; // [{ long_id, attribute_name }]
+
+    const results = [];
+
+    for (const row of candidates) {
+        const cleanedAttribute = attribute?.trim();
+        const candidateId = row['long_id']?.toString().trim();
+        const value = row[cleanedAttribute]?.toString().trim();               
+
+        if (!candidateId || value === undefined) {
+            results.push({ candidateId, attribute: cleanedAttribute, value, status: 'Skipped - missing data' });
+            continue;
+        }
+
+        try {
+            const response = await fetch(`${apiInstance}/api/v1/public/candidate/attributes/${candidateId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': authToken,
+                    'Account-ID': accountId,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ attributes: { [cleanedAttribute]: value } })
+            });
+            const data = await response.json();
+            results.push({ candidateId, attribute, value, status: 'Success', response: data });
+        } catch (err) {
+            results.push({ candidateId, attribute, value, status: 'Failed', error: err.message });
+        }
+    }
+
+    res.json({ success: true, results });
 });
 
 app.use(errorHandler);
