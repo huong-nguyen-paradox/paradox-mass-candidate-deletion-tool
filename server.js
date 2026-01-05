@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import errorHandler from './errorHandler.js';
 import AbortController from 'abort-controller';
 import { upload, processCSV } from './csvParser.js';
+import { uploadRoom, processRoomCSV } from './csvMassRoomImportAPI.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -164,6 +165,60 @@ app.post('/update-candidate-attribute', async (req, res, next) => {
     }
 
     res.json({ success: true, results });
+});
+
+app.post('/upload-room', uploadRoom.single('file'), (req, res, next) => {
+    processRoomCSV(req, res, next); 
+}, (req, res) => {
+    const parsedData = req.parsedCSV;
+    res.send({
+        success: true,
+        message: `File successfully uploaded.`,
+        data: parsedData
+    });
+});
+
+app.get('/location', async (req, res, next) => {
+    const authToken = req.headers.authorization;
+    const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
+    let page = req.query.page, per_page = req.query.per_page
+    try {
+        const response = await fetch(`${apiInstance}/api/v1/public/company/locations?per_page=${per_page}&page=${page}`, {
+            method: 'GET',
+            headers: { 'Authorization': authToken, 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+        if (data.errors) {
+            const err = new Error(data.errors[0].message);
+            throw err;
+        } else {
+            return res.send(data);
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
+app.post('/create-room', async (req, res, next) => {
+    const authToken = req.headers.authorization;
+    const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
+
+    try {
+        const response = await fetch(`${apiInstance}/api/v1/public/rooms`, {
+            method: 'POST',
+            headers: { 'Authorization': authToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        const data = await response.json();
+        if (data.errors) {
+            const err = new Error(data.errors[0].message);
+            throw err;
+        } else {
+            return res.send(data);
+        }
+    } catch (err) {
+        return next(err);
+    }
 });
 
 app.use(errorHandler);
