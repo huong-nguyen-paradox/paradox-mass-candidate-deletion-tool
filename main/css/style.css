@@ -106,7 +106,8 @@ input::file-selector-button {
 }
 
 .output-container {
-    display: block;
+    display: flex;
+    flex-direction: column;
     padding: 5px;
     border: 2px solid #ccc;
 }
@@ -118,6 +119,7 @@ input::file-selector-button {
     align-items: center;
     width: 100%;
     margin-bottom: 10px;
+    flex-shrink: 0;
 }
 
 #output {
@@ -126,11 +128,11 @@ input::file-selector-button {
     background-color: #7a7a7c;
     padding: 15px;
     border-radius: 4px;
-    margin-top: 10px;
+    margin-top: 0;
     color: white;
     overflow: auto;
     overflow-wrap: break-word;
-    clear: both;
+    flex: 1;
 }
 
 /* Button Styles */
@@ -231,30 +233,34 @@ button[disabled]:hover {
     cursor: pointer; 
 }
 
-.mapping-container {
-    margin: 20px 0;
-    padding: 20px;
-    border: 2px solid #25c9d0;
-    border-radius: 4px;
-    background-color: #ffffff;
+/* Mapping Modal Styles */
+#mapping-modal .modal-content {
+    padding: 30px;
 }
 
-.mapping-container h3 {
+#mapping-modal h4 {
     color: #25c9d0;
     margin-top: 0;
+    margin-bottom: 10px;
+}
+
+#mapping-modal p {
+    color: #666;
+    margin-bottom: 20px;
 }
 
 .mapping-row {
     display: flex;
     align-items: center;
     margin-bottom: 15px;
-    padding: 10px;
+    padding: 15px;
     background-color: #f7f7f7;
     border-radius: 4px;
+    border-left: 3px solid #25c9d0;
 }
 
 .mapping-label {
-    min-width: 150px;
+    min-width: 180px;
     font-weight: bold;
     color: #282c34;
 }
@@ -262,4 +268,13 @@ button[disabled]:hover {
 .mapping-select {
     flex: 1;
     margin-left: 20px;
+}
+
+#mapping-modal .modal-footer {
+    padding: 15px 30px;
+    border-top: 1px solid #e0e0e0;
+}
+
+#mapping-modal .modal-footer button {
+    margin-left: 10px;
 }
