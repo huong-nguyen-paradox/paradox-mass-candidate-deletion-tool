@@ -102,7 +102,7 @@ async function createRoom(room, authToken, apiInstance, signal) {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(`${candidateData.name}: ${response.status} - ${error.message}`);
+            throw new Error(`${room.name}: ${response.status} - ${error.message}`);
         }
         return await response.json();
     } catch (error) {
@@ -286,16 +286,130 @@ export async function uploadFile() {
     }
 }
 
-// TO-DO: implement processing CSV file and getting all the location OID's from API --> in order to be used for createRooms()
+// API fields that need to be mapped
+const ROOM_API_FIELDS = ['location_id', 'name', 'seats', 'cal_email', 'room_ex_id'];
+let csvHeaders = [];
+let uploadedFilePath = null;
+
 // uploadFileForRooms() will be called when the user clicks the upload button for rooms
 export async function uploadFileForRooms() {
     if (roomData.length !== 0) {
         emitter.emit('clearData');
     }
     const fileInput = document.getElementById('csvFile');
+    
+    if (!fileInput.files[0]) {
+        showMessage('Please select a CSV file first', 'error');
+        return;
+    }
+
     const formData = new FormData();
     formData.append('file', fileInput.files[0]);
 
+    try {
+        // First, get headers from CSV
+        const response = await fetch('/upload-room-headers', {
+            method: 'POST',
+            body: formData,
+        });
+        const resp = await response.json();
+        if (!resp.success) {
+            throw new Error(resp.message);
+        }
+        
+        csvHeaders = resp.headers;
+        uploadedFilePath = resp.filePath; // Store file path for later use
+        
+        // Show mapping UI
+        showMappingUI(csvHeaders);
+    } catch (error) {
+        const { message } = error;
+        return showMessage(message);
+    }
+}
+
+// Show the mapping UI with CSV headers
+function showMappingUI(headers) {
+    const mappingContainer = document.getElementById('mapping-container');
+    const mappingFields = document.getElementById('mapping-fields');
+    
+    // Clear previous mappings
+    mappingFields.innerHTML = '';
+    
+    // Create a select dropdown for each API field
+    ROOM_API_FIELDS.forEach(apiField => {
+        const row = document.createElement('div');
+        row.className = 'mapping-row';
+        
+        const label = document.createElement('div');
+        label.className = 'mapping-label';
+        label.textContent = apiField.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':';
+        
+        const select = document.createElement('select');
+        select.id = `map-${apiField}`;
+        select.className = 'mapping-select browser-default';
+        select.required = true;
+        
+        // Add empty option
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = '-- Select CSV Column --';
+        emptyOption.disabled = true;
+        emptyOption.selected = true;
+        select.appendChild(emptyOption);
+        
+        // Add CSV headers as options
+        headers.forEach(header => {
+            const option = document.createElement('option');
+            option.value = header;
+            option.textContent = header;
+            select.appendChild(option);
+        });
+        
+        row.appendChild(label);
+        row.appendChild(select);
+        mappingFields.appendChild(row);
+    });
+    
+    // Show mapping container
+    mappingContainer.style.display = 'block';
+    
+    // Reinitialize Materialize select
+    M.FormSelect.init(document.querySelectorAll('.mapping-select'));
+}
+
+// Submit the mapping and parse CSV
+export async function submitMapping() {
+    const mapping = {};
+    let allMapped = true;
+    
+    // Collect mappings
+    ROOM_API_FIELDS.forEach(apiField => {
+        const select = document.getElementById(`map-${apiField}`);
+        const selectedValue = select.value;
+        
+        if (!selectedValue) {
+            allMapped = false;
+            return;
+        }
+        
+        mapping[apiField] = selectedValue;
+    });
+    
+    if (!allMapped) {
+        showMessage('Please map all required fields', 'error');
+        return;
+    }
+    
+    // Hide mapping UI
+    document.getElementById('mapping-container').style.display = 'none';
+    
+    // Re-upload file with mapping
+    const fileInput = document.getElementById('csvFile');
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('headerMapping', JSON.stringify(mapping));
+    
     try {
         const response = await fetch('/upload-room', {
             method: 'POST',
@@ -306,16 +420,26 @@ export async function uploadFileForRooms() {
             throw new Error(resp.message);
         }
         roomData.push(...resp.data);
-        showMessage(resp.message, "success")
+        showMessage(resp.message, "success");
+        
+        // Enable submit button
+        document.getElementById('submit-btn').disabled = false;
     } catch (error) {
-        const { message } = error
+        const { message } = error;
         return showMessage(message);
     }
 }
 
+// Cancel mapping
+export function cancelMapping() {
+    document.getElementById('mapping-container').style.display = 'none';
+    csvHeaders = [];
+    uploadedFilePath = null;
+}
+
 // Function to get all locations and their OID's in order to be used in rooms API
 export async function getLocationsOID(authToken, apiInstance) {
-    let curr_page = 1, total_pages = 0, per_page = 50, max_page = 2
+    let curr_page = 1, total_pages = 0, per_page = 300, max_pages = 2
     let locAPIjson = { 'locations': [] }
     let locOIDdic = {}
 
@@ -341,8 +465,8 @@ export async function getLocationsOID(authToken, apiInstance) {
 
     if (total_pages > 1) {
         let max_items = per_page * total_pages
-        per_page = max_items / max_page
-        total_pages = max_page
+        per_page = max_items / max_pages
+        total_pages = max_pages
         console.log('max_items = ' + max_items)
 
         for (let i = 1; i <= total_pages; i++) {
@@ -405,29 +529,33 @@ export async function startRoomImport() {
 
     try {
         const authToken = await getAuthToken(accountId, secretKey, apiInstance);
-
         await getLocationsOID(authToken, apiInstance);
-        console.log('--------------------roomData object--------------------')
-        console.log(roomData)
-
         abortController = new AbortController();
         const signal = abortController.signal;
         for (const room of roomData) {
-            const response = await createRoom(room, authToken, apiInstance, signal);
-            const roomResult = response.room
-            document.getElementById('output').innerHTML += `<p>created: ${roomResult}</p>`;
+            try {
+                const response = await createRoom(room, authToken, apiInstance, signal);
+                const roomResult = response.name
+                document.getElementById('output').innerHTML += `<p>created: ${roomResult}</p>`;
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
+                }
+                const { message } = err
+                showMessage(message);
+                document.getElementById('output').innerHTML += `<p>Error for room: ${room.name} \n\t ${message}</p>`;
+            }
             requestCount += 1;
             document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
+            // return;
         }
         showMessage('Task Complete', 'success')
     } catch (err) {
-        if (err.name === 'AbortError') {
-            document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
-        }
         const { message } = err
         showMessage(message);
-        return;
+        document.getElementById('output').innerHTML += `<p>Error getting Locations: ${message}</p>`;
     }
+
 
 }
 
@@ -469,7 +597,9 @@ window.api = {
     stopRequest,
     uploadFile,
     uploadFileForRooms,
-    startRoomImport
+    startRoomImport,
+    submitMapping,
+    cancelMapping
 };
 
 emitter.on('clearData', () => {

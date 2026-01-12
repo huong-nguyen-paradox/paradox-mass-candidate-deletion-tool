@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import errorHandler from './errorHandler.js';
 import AbortController from 'abort-controller';
 import { upload, processCSV } from './csvParser.js';
-import { uploadRoom, processRoomCSV } from './csvMassRoomImportAPI.js';
+import { uploadRoom, processRoomCSV, getRoomCSVHeaders, API_FIELDS } from './csvMassRoomImportAPI.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -167,7 +167,27 @@ app.post('/update-candidate-attribute', async (req, res, next) => {
     res.json({ success: true, results });
 });
 
+// Endpoint to get CSV headers only (for mapping UI)
+app.post('/upload-room-headers', uploadRoom.single('file'), (req, res, next) => {
+    getRoomCSVHeaders(req, res, next);
+}, (req, res) => {
+    res.send({
+        success: true,
+        headers: req.csvHeaders,
+        filePath: req.file.path // Keep file path for later parsing
+    });
+});
+
+// Endpoint to parse CSV with header mapping
 app.post('/upload-room', uploadRoom.single('file'), (req, res, next) => {
+    // Parse headerMapping from form data
+    if (req.body.headerMapping) {
+        try {
+            req.body.headerMapping = JSON.parse(req.body.headerMapping);
+        } catch (e) {
+            return res.status(400).json({ success: false, message: 'Invalid header mapping format.' });
+        }
+    }
     processRoomCSV(req, res, next); 
 }, (req, res) => {
     const parsedData = req.parsedCSV;
@@ -204,6 +224,7 @@ app.post('/create-room', async (req, res, next) => {
     const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
 
     try {
+        console.log("request body sent: " + JSON.stringify(req.body))
         const response = await fetch(`${apiInstance}/api/v1/public/rooms`, {
             method: 'POST',
             headers: { 'Authorization': authToken, 'Content-Type': 'application/json' },

@@ -111,14 +111,26 @@ input::file-selector-button {
     border: 2px solid #ccc;
 }
 
+#output-progress .flex-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
 #output {
+    display: block;
+    width: 100%;
     background-color: #7a7a7c;
     padding: 15px;
     border-radius: 4px;
-    margin-top: 20px;
+    margin-top: 10px;
     color: white;
     overflow: auto;
     overflow-wrap: break-word;
+    clear: both;
 }
 
 /* Button Styles */
@@ -217,4 +229,37 @@ button[disabled]:hover {
 
 #csvFile {
     cursor: pointer; 
+}
+
+.mapping-container {
+    margin: 20px 0;
+    padding: 20px;
+    border: 2px solid #25c9d0;
+    border-radius: 4px;
+    background-color: #ffffff;
+}
+
+.mapping-container h3 {
+    color: #25c9d0;
+    margin-top: 0;
+}
+
+.mapping-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f7f7f7;
+    border-radius: 4px;
+}
+
+.mapping-label {
+    min-width: 150px;
+    font-weight: bold;
+    color: #282c34;
+}
+
+.mapping-select {
+    flex: 1;
+    margin-left: 20px;
 }
