@@ -1,249 +1,299 @@
-import express from 'express';
-import fetch from 'node-fetch';
-import bodyParser from 'body-parser';
-import path, { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import errorHandler from './errorHandler.js';
-import AbortController from 'abort-controller';
-import { upload, processCSV } from './csvParser.js';
-import { uploadRoom, processRoomCSV, getRoomCSVHeaders, API_FIELDS } from './csvMassRoomImportAPI.js';
+import express from "express";
+import fetch from "node-fetch";
+import bodyParser from "body-parser";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+import errorHandler from "./errorHandler.js";
+import { upload, uploadRoom, processCSV, getCSVHeaders, processCSVWithMapping,} from "./csvParser.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const port = 3000;
 
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    next();
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  next();
 });
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use('/main', express.static(path.join(__dirname, '/main')));
+app.use("/main", express.static(path.join(__dirname, "/main")));
 
 // Proxy endpoint for authentication
-app.post('/auth/token', async (req, res, next) => {
-    const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
-    try {
-        const response = await fetch(`${apiInstance}/api/v1/public/auth/token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams(req.body)
-        });
-        const data = await response.json();
-        if (data.errors) {
-            const err = new Error(data.errors[0].message);
-            err.status = 401;
-            throw err;
-        } else {
-            return res.send(data);
-        }
-    } catch (err) {
-        return next(err);
+app.post("/auth/token", async (req, res, next) => {
+  const apiInstance = req.query.apiInstance || "https://api.paradox.ai";
+  try {
+    const response = await fetch(`${apiInstance}/api/v1/public/auth/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(req.body),
+    });
+    const data = await response.json();
+    if (data.errors) {
+      const err = new Error(data.errors[0].message);
+      err.status = 401;
+      throw err;
+    } else {
+      return res.send(data);
     }
+  } catch (err) {
+    return next(err);
+  }
 });
 
-app.post('/upload', upload.single('file'), (req, res, next) => {
+app.post(
+  "/upload",
+  upload.single("file"),
+  (req, res, next) => {
     processCSV(req, res, next);
-}, (req, res) => {
+  },
+  (req, res) => {
     const parsedData = req.parsedCSV;
     res.send({
-        success: true,
-        message: `File successfully uploaded.`,
-        data: parsedData
+      success: true,
+      message: `File successfully uploaded.`,
+      data: parsedData,
     });
+  }
+);
+
+app.post("/update-status/:id", async (req, res, next) => {
+  const authToken = req.headers.authorization;
+  const candidateId = req.params.id;
+  const { candidate_journey_status } = req.body;
+  const apiInstance = req.query.apiInstance || "https://api.paradox.ai";
+
+  try {
+    const response = await fetch(
+      `${apiInstance}/api/v1/public/candidates/${candidateId}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: authToken,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ candidate_journey_status }),
+      }
+    );
+    const data = await response.json();
+    if (data.errors) {
+      const err = new Error(data.errors[0].message);
+      throw err;
+    } else {
+      return res.send(data);
+    }
+  } catch (err) {
+    return next(err);
+  }
 });
 
-app.post('/update-status/:id', async (req, res, next) => {
-    const authToken = req.headers.authorization;
-    const candidateId = req.params.id;
-    const { candidate_journey_status } = req.body;
-    const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
+app.delete("/delete-candidate/:id", async (req, res, next) => {
+  const authToken = req.headers.authorization;
+  const candidateId = req.params.id;
+  const apiInstance = req.query.apiInstance || "https://api.paradox.ai";
+
+  try {
+    const response = await fetch(
+      `${apiInstance}/api/v1/public/candidates/${candidateId}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: authToken },
+      }
+    );
+    const data = await response.json();
+    if (data.errors) {
+      const err = new Error(data.errors[0].message);
+      throw err;
+    } else {
+      return res.send(data);
+    }
+  } catch (err) {
+    return next(err);
+  }
+});
+
+app.post("/create-candidate", async (req, res, next) => {
+  const authToken = req.headers.authorization;
+  const apiInstance = req.query.apiInstance || "https://api.paradox.ai";
+
+  try {
+    const response = await fetch(`${apiInstance}/api/v1/public/candidates`, {
+      method: "POST",
+      headers: { Authorization: authToken, "Content-Type": "application/json" },
+      body: JSON.stringify(req.body),
+    });
+    const data = await response.json();
+    if (data.errors) {
+      const err = new Error(data.errors[0].message);
+      throw err;
+    } else {
+      return res.send(data);
+    }
+  } catch (err) {
+    return next(err);
+  }
+});
+
+app.post("/update-candidate-attribute", async (req, res, next) => {
+  const authToken = req.headers.authorization;
+  const accountId = req.headers["account-id"];
+  const apiInstance = req.query.apiInstance || "https://api.paradox.ai";
+  const { attribute } = req.body;
+  const candidates = req.body.data; // [{ long_id, attribute_name }]
+
+  const results = [];
+
+  for (const row of candidates) {
+    const cleanedAttribute = attribute?.trim();
+    const candidateId = row["long_id"]?.toString().trim();
+    const value = row[cleanedAttribute]?.toString().trim();
+
+    if (!candidateId || !value) {
+      results.push({
+        candidateId,
+        attribute: cleanedAttribute,
+        value,
+        status: "Skipped - missing data",
+      });
+      continue;
+    }
 
     try {
-        const response = await fetch(`${apiInstance}/api/v1/public/candidates/${candidateId}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': authToken,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ candidate_journey_status })
-        });
-        const data = await response.json();
-        if (data.errors) {
-            const err = new Error(data.errors[0].message);
-            throw err;
-        } else {
-            return res.send(data);
+      const response = await fetch(
+        `${apiInstance}/api/v1/public/candidate/attributes/${candidateId}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: authToken,
+            "Account-ID": accountId,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ attributes: { [cleanedAttribute]: value } }),
         }
+      );
+      const data = await response.json();
+      results.push({
+        candidateId,
+        attribute,
+        value,
+        status: "Success",
+        response: data,
+      });
     } catch (err) {
-        return next(err);
+      results.push({
+        candidateId,
+        attribute,
+        value,
+        status: "Failed",
+        error: err.message,
+      });
     }
-});
+  }
 
-app.delete('/delete-candidate/:id', async (req, res, next) => {
-    const authToken = req.headers.authorization;
-    const candidateId = req.params.id;
-    const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
-
-    try {
-        const response = await fetch(`${apiInstance}/api/v1/public/candidates/${candidateId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': authToken }
-        });
-        const data = await response.json();
-        if (data.errors) {
-            const err = new Error(data.errors[0].message);
-            throw err;
-        } else {
-            return res.send(data);
-        }
-    } catch (err) {
-        return next(err);
-    }
-});
-
-app.post('/create-candidate', async (req, res, next) => {
-    const authToken = req.headers.authorization;
-    const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
-
-    try {
-        const response = await fetch(`${apiInstance}/api/v1/public/candidates`, {
-            method: 'POST',
-            headers: { 'Authorization': authToken, 'Content-Type': 'application/json' },
-            body: JSON.stringify(req.body)
-        });
-        const data = await response.json();
-        if (data.errors) {
-            const err = new Error(data.errors[0].message);
-            throw err;
-        } else {
-            return res.send(data);
-        }
-    } catch (err) {
-        return next(err);
-    }
-});
-
-app.post('/update-candidate-attribute', async (req, res, next) => {
-    const authToken = req.headers.authorization;
-    const accountId = req.headers['account-id'];
-    const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
-    const { attribute } = req.body;
-    const candidates = req.body.data; // [{ long_id, attribute_name }]
-
-    const results = [];
-
-    for (const row of candidates) {
-        const cleanedAttribute = attribute?.trim();
-        const candidateId = row['long_id']?.toString().trim();
-        const value = row[cleanedAttribute]?.toString().trim();               
-
-        if (!candidateId || value === undefined) {
-            results.push({ candidateId, attribute: cleanedAttribute, value, status: 'Skipped - missing data' });
-            continue;
-        }
-
-        try {
-            const response = await fetch(`${apiInstance}/api/v1/public/candidate/attributes/${candidateId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': authToken,
-                    'Account-ID': accountId,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ attributes: { [cleanedAttribute]: value } })
-            });
-            const data = await response.json();
-            results.push({ candidateId, attribute, value, status: 'Success', response: data });
-        } catch (err) {
-            results.push({ candidateId, attribute, value, status: 'Failed', error: err.message });
-        }
-    }
-
-    res.json({ success: true, results });
+  res.json({ success: true, results });
 });
 
 // Endpoint to get CSV headers only (for mapping UI)
-app.post('/upload-room-headers', uploadRoom.single('file'), (req, res, next) => {
-    getRoomCSVHeaders(req, res, next);
-}, (req, res) => {
+app.post(
+  "/upload-room-headers",
+  uploadRoom.single("file"),
+  (req, res, next) => {
+    getCSVHeaders(req, res, next);
+  },
+  (req, res) => {
     res.send({
-        success: true,
-        headers: req.csvHeaders,
-        filePath: req.file.path // Keep file path for later parsing
+      success: true,
+      headers: req.csvHeaders,
+      filePath: req.file.path, // Keep file path for later parsing
     });
-});
+  }
+);
 
 // Endpoint to parse CSV with header mapping
-app.post('/upload-room', uploadRoom.single('file'), (req, res, next) => {
+app.post(
+  "/upload-room",
+  uploadRoom.single("file"),
+  (req, res, next) => {
     // Parse headerMapping from form data
     if (req.body.headerMapping) {
-        try {
-            req.body.headerMapping = JSON.parse(req.body.headerMapping);
-        } catch (e) {
-            return res.status(400).json({ success: false, message: 'Invalid header mapping format.' });
-        }
+      try {
+        req.body.headerMapping = JSON.parse(req.body.headerMapping);
+      } catch (e) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid header mapping format." });
+      }
     }
-    processRoomCSV(req, res, next); 
-}, (req, res) => {
+    processCSVWithMapping(req, res, next); // original
+  },
+  (req, res) => {
     const parsedData = req.parsedCSV;
     res.send({
-        success: true,
-        message: `File successfully uploaded.`,
-        data: parsedData
+      success: true,
+      message: `File successfully uploaded.`,
+      data: parsedData,
     });
+  }
+);
+
+app.get("/location", async (req, res, next) => {
+  const authToken = req.headers.authorization;
+  const apiInstance = req.query.apiInstance || "https://api.paradox.ai";
+  let page = req.query.page,
+    per_page = req.query.per_page;
+  try {
+    const response = await fetch(
+      `${apiInstance}/api/v1/public/company/locations?per_page=${per_page}&page=${page}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: authToken,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const data = await response.json();
+    if (data.errors) {
+      const err = new Error(data.errors[0].message);
+      throw err;
+    } else {
+      return res.send(data);
+    }
+  } catch (err) {
+    return next(err);
+  }
 });
 
-app.get('/location', async (req, res, next) => {
-    const authToken = req.headers.authorization;
-    const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
-    let page = req.query.page, per_page = req.query.per_page
-    try {
-        const response = await fetch(`${apiInstance}/api/v1/public/company/locations?per_page=${per_page}&page=${page}`, {
-            method: 'GET',
-            headers: { 'Authorization': authToken, 'Content-Type': 'application/json' },
-        });
-        const data = await response.json();
-        if (data.errors) {
-            const err = new Error(data.errors[0].message);
-            throw err;
-        } else {
-            return res.send(data);
-        }
-    } catch (err) {
-        return next(err);
-    }
-});
+app.post("/create-room", async (req, res, next) => {
+  const authToken = req.headers.authorization;
+  const apiInstance = req.query.apiInstance || "https://api.paradox.ai";
 
-app.post('/create-room', async (req, res, next) => {
-    const authToken = req.headers.authorization;
-    const apiInstance = req.query.apiInstance || 'https://api.paradox.ai';
-
-    try {
-        console.log("request body sent: " + JSON.stringify(req.body))
-        const response = await fetch(`${apiInstance}/api/v1/public/rooms`, {
-            method: 'POST',
-            headers: { 'Authorization': authToken, 'Content-Type': 'application/json' },
-            body: JSON.stringify(req.body)
-        });
-        const data = await response.json();
-        if (data.errors) {
-            const err = new Error(data.errors[0].message);
-            throw err;
-        } else {
-            return res.send(data);
-        }
-    } catch (err) {
-        return next(err);
+  try {
+    const response = await fetch(`${apiInstance}/api/v1/public/rooms`, {
+      method: "POST",
+      headers: { Authorization: authToken, "Content-Type": "application/json" },
+      body: JSON.stringify(req.body),
+    });
+    const data = await response.json();
+    if (data.errors) {
+      const err = new Error(data.errors[0].message);
+      throw err;
+    } else {
+      return res.send(data);
     }
+  } catch (err) {
+    return next(err);
+  }
 });
 
 app.use(errorHandler);
 
 app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running on http://localhost:${port}`);
 });

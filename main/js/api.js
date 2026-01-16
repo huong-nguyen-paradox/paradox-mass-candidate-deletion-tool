@@ -1,6 +1,4 @@
 import emitter from "./event.js";
-// import { API_FIELDS } from "../../csvMassRoomImportAPI.js";
-// console.log('import statement: API_FIELDS = ', API_FIELDS); 
 
 // Global Variables
 let abortController = null; // Used to stop fetch requests
@@ -8,611 +6,665 @@ let candidateData = []; // store candidate data to be used in calls to Olivia AP
 let roomData = []; // store room data to be used in calls to Rooms API
 
 async function getAuthToken(accountId, secretKey, apiInstance) {
-    const params = new URLSearchParams();
-    params.append('grant_type', 'client_credentials');
-    params.append('client_id', accountId);
-    params.append('client_secret', secretKey);
+  const params = new URLSearchParams();
+  params.append("grant_type", "client_credentials");
+  params.append("client_id", accountId);
+  params.append("client_secret", secretKey);
 
-    try {
-        const response = await fetch(`/auth/token?apiInstance=${encodeURIComponent(apiInstance)}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(`HTTP error! status: ${response.status} - ${error.message}`);
-        }
-        const data = await response.json();
-        return data.access_token;
-    } catch (err) {
-        throw err;
+  try {
+    const response = await fetch(
+      `/auth/token?apiInstance=${encodeURIComponent(apiInstance)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params,
+      }
+    );
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        `HTTP error! status: ${response.status} - ${error.message}`
+      );
     }
+    const data = await response.json();
+    return data.access_token;
+  } catch (err) {
+    throw err;
+  }
 }
 
-async function updateStatus(status, candidateId, authToken, apiInstance, signal) {
-    try {
-        const response = await fetch(`/update-status/${candidateId}?apiInstance=${encodeURIComponent(apiInstance)}`, {
-            method: "POST",
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ "candidate_journey_status": status }),
-            signal: signal // Attach the abort signal to the fetch request
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(`${candidateId}: ${response.status} - ${error.message}`);
-        }
-        return await response.json();
-    } catch (err) {
-        throw err;
+async function updateStatus(
+  status,
+  candidateId,
+  authToken,
+  apiInstance,
+  signal
+) {
+  try {
+    const response = await fetch(
+      `/update-status/${candidateId}?apiInstance=${encodeURIComponent(
+        apiInstance
+      )}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ candidate_journey_status: status }),
+        signal: signal, // Attach the abort signal to the fetch request
+      }
+    );
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`${candidateId}: ${response.status} - ${error.message}`);
     }
+    return await response.json();
+  } catch (err) {
+    throw err;
+  }
 }
 
 async function deleteCandidate(candidateId, authToken, apiInstance, signal) {
-    try {
-        const response = await fetch(`/delete-candidate/${candidateId}?apiInstance=${encodeURIComponent(apiInstance)}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            },
-            signal: signal
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(`${candidateId}: ${response.status} - ${error.message}`);
-        }
-        return await response.json();
-    } catch (error) {
-        throw error;
+  try {
+    const response = await fetch(
+      `/delete-candidate/${candidateId}?apiInstance=${encodeURIComponent(
+        apiInstance
+      )}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        signal: signal,
+      }
+    );
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`${candidateId}: ${response.status} - ${error.message}`);
     }
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function createCandidate(candidateData, authToken, apiInstance, signal) {
-    try {
-        const response = await fetch(`/create-candidate?apiInstance=${encodeURIComponent(apiInstance)}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(candidateData),
-            signal: signal
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(`${candidateData.name}: ${response.status} - ${error.message}`);
-        }
-        return await response.json();
-    } catch (error) {
-        throw error;
+  try {
+    const response = await fetch(
+      `/create-candidate?apiInstance=${encodeURIComponent(apiInstance)}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(candidateData),
+        signal: signal,
+      }
+    );
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        `${candidateData.name}: ${response.status} - ${error.message}`
+      );
     }
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function createRoom(room, authToken, apiInstance, signal) {
-    try {
-        const response = await fetch(`/create-room?apiInstance=${encodeURIComponent(apiInstance)}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(room),
-            signal: signal
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(`${room.name}: ${response.status} - ${error.message}`);
-        }
-        return await response.json();
-    } catch (error) {
-        throw error;
+  try {
+    const response = await fetch(
+      `/create-room?apiInstance=${encodeURIComponent(apiInstance)}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(room),
+        signal: signal,
+      }
+    );
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`${room.name}: ${response.status} - ${error.message}`);
     }
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
 }
 
+function appendOutput(message) {
+  document.getElementById("output").innerHTML += `<p>${message}</p>`;
+}
 
 async function updateCandidateAttributes() {
-    const accountId = document.getElementById('accountId').value;
-    const secretKey = document.getElementById('secretKey').value;
-    const attribute = document.getElementById('attribute').value;
-    const apiInstance = document.getElementById('apiInstance').value;
+  const accountId = document.getElementById("accountId").value;
+  const secretKey = document.getElementById("secretKey").value;
+  const attribute = document.getElementById("attribute").value;
+  const apiInstance = document.getElementById("apiInstance").value;
 
-    const authToken = await getAuthToken(accountId, secretKey, apiInstance);
+  const authToken = await getAuthToken(accountId, secretKey, apiInstance);
 
-    const payload = {
-        attribute: attribute,
-        data: candidateData
-    };
+  const payload = {
+    attribute: attribute,
+    data: candidateData,
+  };
 
-    const response = await fetch(`/update-candidate-attribute?apiInstance=${encodeURIComponent(apiInstance)}`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'Account-ID': accountId,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-    });
+  const response = await fetch(
+    `/update-candidate-attribute?apiInstance=${encodeURIComponent(
+      apiInstance
+    )}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        "Account-ID": accountId,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
 
-    const data = await response.json();
-    const results = data.results || [];
+  const data = await response.json();
+  const results = data.results || [];
 
-    const requestTotal = results.length;
-    let requestCount = 0;
+  const requestTotal = results.length;
+  let requestCount = 0;
 
-    document.getElementById('output-progress').style.display = 'block';
-    document.getElementById('stop').disabled = false;
-    document.getElementById('output').innerHTML = '';
-    document.getElementById('count').innerHTML = `0 / ${requestTotal}`;
+  document.getElementById("output-progress").style.display = "block";
+  document.getElementById("stop").disabled = false;
+  document.getElementById("output").innerHTML = "";
+  document.getElementById("count").innerHTML = `0 / ${requestTotal}`;
 
-    for (const result of results) {
-        requestCount += 1;
+  for (const result of results) {
+    requestCount += 1;
 
-        const p = document.createElement('p');
-        if (result.status === 'Success') {
-            p.innerHTML = `<span class="green-text">✅ ${result.candidateId}: ${result.attribute} → ${result.value}</span>`;
-        } else {
-            p.innerHTML = `<span class="red-text">⚠️ ${result.candidateId || '[no ID]'}: ${result.status} — ${result.value || '[no value]'}</span>`;
-        }
-
-        document.getElementById('output').appendChild(p);
-        document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
+    const p = document.createElement("p");
+    if (result.status === "Success") {
+      p.innerHTML = `<span class="green-text">✅ ${result.candidateId}: ${result.attribute} → ${result.value}</span>`;
+    } else {
+      p.innerHTML = `<span class="red-text">⚠️ ${
+        result.candidateId || "[no ID]"
+      }: ${result.status} — ${result.value || "[no value]"}</span>`;
     }
 
-    showMessage('Task Complete', 'success');
+    document.getElementById("output").appendChild(p);
+    document.getElementById(
+      "count"
+    ).innerHTML = `${requestCount} / ${requestTotal}`;
+  }
+
+  showMessage("Task Complete", "success");
 }
 
 async function startUpdate() {
-    const accountId = document.getElementById('accountId').value;
-    const secretKey = document.getElementById('secretKey').value;
-    const status = document.getElementById('status').value;
-    const apiInstance = document.getElementById('apiInstance').value;
-    const requestTotal = candidateData.length;
-    let requestCount = 0;
-    document.getElementById('output-progress').style.display = 'block';
-    document.getElementById('stop').disabled = false;
+  const accountId = document.getElementById("accountId").value;
+  const secretKey = document.getElementById("secretKey").value;
+  const status = document.getElementById("status").value;
+  const apiInstance = document.getElementById("apiInstance").value;
+  const requestTotal = candidateData.length;
+  let requestCount = 0;
+  document.getElementById("output-progress").style.display = "block";
+  document.getElementById("stop").disabled = false;
 
-    try {
-        const authToken = await getAuthToken(accountId, secretKey, apiInstance);
-        abortController = new AbortController();
-        const signal = abortController.signal;
+  try {
+    const authToken = await getAuthToken(accountId, secretKey, apiInstance);
+    abortController = new AbortController();
+    const signal = abortController.signal;
 
-        for (const candidateId of candidateData) {
-            requestCount += 1;
-            document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
-            const response = await updateStatus(status, candidateId.trim(), authToken, apiInstance, signal);
-            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
-        }
-        showMessage('Task Complete', 'success')
-    } catch (err) {
-        if (err.name === 'AbortError') {
-            document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
-        }
-        if (typeof M !== 'undefined' && M.toast) {
-            M.toast({ html: err });
-        } else {
-            console.error(err);
-        }
-        return;
+    for (const candidateId of candidateData) {
+      requestCount += 1;
+      document.getElementById(
+        "count"
+      ).innerHTML = `${requestCount} / ${requestTotal}`;
+      const response = await updateStatus(
+        status,
+        candidateId.trim(),
+        authToken,
+        apiInstance,
+        signal
+      );
+      appendOutput(`Candidate ${candidateId}: ${JSON.stringify(response)}`);
     }
+    showMessage("Task Complete", "success");
+  } catch (err) {
+    if (err.name === "AbortError") {
+      appendOutput("Requests stopped by user");
+    }
+    if (typeof M !== "undefined" && M.toast) {
+      M.toast({ html: err });
+    } else {
+      console.error(err);
+    }
+    return;
+  }
 }
 
 async function deleteCandidates() {
-    const accountId = document.getElementById('accountId').value;
-    const secretKey = document.getElementById('secretKey').value;
-    const apiInstance = document.getElementById('apiInstance').value;
-    const requestTotal = candidateData.length;
-    let requestCount = 0;
-    document.getElementById('output-progress').style.display = 'block';
-    document.getElementById('stop').disabled = false;
+  const accountId = document.getElementById("accountId").value;
+  const secretKey = document.getElementById("secretKey").value;
+  const apiInstance = document.getElementById("apiInstance").value;
+  const requestTotal = candidateData.length;
+  let requestCount = 0;
+  document.getElementById("output-progress").style.display = "block";
+  document.getElementById("stop").disabled = false;
 
-    try {
-        const authToken = await getAuthToken(accountId, secretKey, apiInstance);
-        abortController = new AbortController();
-        const signal = abortController.signal;
-        for (const candidateId of candidateData) {
-            requestCount += 1;
-            document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
-            const response = await deleteCandidate(candidateId.trim(), authToken, apiInstance, signal);
-            document.getElementById('output').innerHTML += `<p>Candidate ${candidateId}: ${JSON.stringify(response)}</p>`;
-        }
-        showMessage('Task Complete', 'success')
-    } catch (err) {
-        if (err.name === 'AbortError') {
-            document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
-
-        }
-        showMessage(err);
+  try {
+    const authToken = await getAuthToken(accountId, secretKey, apiInstance);
+    abortController = new AbortController();
+    const signal = abortController.signal;
+    for (const candidateId of candidateData) {
+      requestCount += 1;
+      document.getElementById(
+        "count"
+      ).innerHTML = `${requestCount} / ${requestTotal}`;
+      const response = await deleteCandidate(
+        candidateId.trim(),
+        authToken,
+        apiInstance,
+        signal
+      );
+      appendOutput(`Candidate ${candidateId}: ${JSON.stringify(response)}`);
     }
+    showMessage("Task Complete", "success");
+  } catch (err) {
+    if (err.name === "AbortError") {
+      appendOutput("Requests stopped by user");
+    }
+    showMessage(err);
+  }
 }
 
 async function createCandidates() {
-    const accountId = document.getElementById('accountId').value;
-    const secretKey = document.getElementById('secretKey').value;
-    const apiInstance = document.getElementById('apiInstance').value;
-    const requestTotal = candidateData.length;
-    let requestCount = 0;
-    document.getElementById('output-progress').style.display = 'flex';
-    document.getElementById('stop').disabled = false;
+  const accountId = document.getElementById("accountId").value;
+  const secretKey = document.getElementById("secretKey").value;
+  const apiInstance = document.getElementById("apiInstance").value;
+  const requestTotal = candidateData.length;
+  let requestCount = 0;
+  document.getElementById("output-progress").style.display = "flex";
+  document.getElementById("stop").disabled = false;
 
-    try {
-        const authToken = await getAuthToken(accountId, secretKey, apiInstance);
-        abortController = new AbortController();
-        const signal = abortController.signal;
-        for (const candidate of candidateData) {
-            const response = await createCandidate(candidate, authToken, apiInstance, signal);
-            const { name, email, OID } = response.candidate
-            document.getElementById('output').innerHTML += `<p>Candidate ${name}: ${OID} - ${email}</p>`;
-            requestCount += 1;
-            document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
-        }
-        showMessage('Task Complete', 'success')
-    } catch (err) {
-        if (err.name === 'AbortError') {
-            document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
-        }
-        const { message } = err
-        showMessage(message);
-        return;
+  try {
+    const authToken = await getAuthToken(accountId, secretKey, apiInstance);
+    abortController = new AbortController();
+    const signal = abortController.signal;
+    for (const candidate of candidateData) {
+      const response = await createCandidate(
+        candidate,
+        authToken,
+        apiInstance,
+        signal
+      );
+      const { name, email, OID } = response.candidate;
+      appendOutput(`Candidate ${name}: ${OID} - ${email}`);
+      requestCount += 1;
+      document.getElementById(
+        "count"
+      ).innerHTML = `${requestCount} / ${requestTotal}`;
     }
+    showMessage("Task Complete", "success");
+  } catch (err) {
+    if (err.name === "AbortError") {
+      appendOutput("Requests stopped by user");
+    }
+    const { message } = err;
+    showMessage(message);
+    return;
+  }
 }
 
 export async function uploadFile() {
-    if (candidateData.length !== 0) {
-        emitter.emit('clearData');
-    }
-    const fileInput = document.getElementById('csvFile');
-    const file = fileInput.files[0];
-    const attribute = document.getElementById('attribute')?.value?.trim();
+  if (candidateData.length !== 0) {
+    emitter.emit("clearData");
+  }
+  const fileInput = document.getElementById("csvFile");
+  const file = fileInput.files[0];
+  const attribute = document.getElementById("attribute")?.value?.trim();
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('attribute', attribute);
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("attribute", attribute);
 
-    try {
-        const response = await fetch('/upload', {
-            method: 'POST',
-            body: formData,
-        });
-        const resp = await response.json();
-        if (!resp.success) {
-            throw new Error(resp.message);
-        }
-        candidateData.push(...resp.data);
-        showMessage(resp.message, "success")
-    } catch (error) {
-        const { message } = error
-        return showMessage(message);
+  try {
+    const response = await fetch("/upload", {
+      method: "POST",
+      body: formData,
+    });
+    const resp = await response.json();
+    if (!resp.success) {
+      throw new Error(resp.message);
     }
+    candidateData.push(...resp.data);
+    showMessage(resp.message, "success");
+  } catch (error) {
+    const { message } = error;
+    return showMessage(message);
+  }
 }
 
 // uploadFileForRooms() will be called when the user clicks the upload button for rooms
 export async function uploadFileForRooms() {
-    const API_FIELDS = ['name', 'location_id', 'seats', 'cal_email', 'room_ex_id']
-    if (roomData.length !== 0) {
-        emitter.emit('clearData');
-    }
-    const fileInput = document.getElementById('csvFile');
-    if (!fileInput.files[0]) {
-        showMessage('Please select a CSV file first', 'error');
-        return;
-    }
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
+  const API_FIELDS = [
+    "name",
+    "location_id",
+    "seats",
+    "cal_email",
+    "room_ex_id",
+  ];
+  if (roomData.length !== 0) {
+    emitter.emit("clearData");
+  }
+  const fileInput = document.getElementById("csvFile");
+  if (!fileInput.files[0]) {
+    showMessage("Please select a CSV file first", "error");
+    return;
+  }
+  const formData = new FormData();
+  formData.append("file", fileInput.files[0]);
 
-    try {
-        // first, get headers from CSV
-        const response = await fetch('/upload-room-headers', {
-            method: 'POST',
-            body: formData,
-        });
-        const resp = await response.json();
-        if (!resp.success) {
-            throw new Error(resp.message);
-        }
-        const csvHeaders = resp.headers;
-        // show mapping UI with headers and API fields
-        showMappingUI(csvHeaders, API_FIELDS);
-    } catch (error) {
-        const { message } = error;
-        return showMessage(message);
+  try {
+    // first, get headers from CSV
+    const response = await fetch("/upload-room-headers", {
+      method: "POST",
+      body: formData,
+    });
+    const resp = await response.json();
+    if (!resp.success) {
+      throw new Error(resp.message);
     }
+    const csvHeaders = resp.headers;
+    showMappingUI(csvHeaders, API_FIELDS); // show mapping UI with headers and API fields
+  } catch (error) {
+    const { message } = error;
+    return showMessage(message);
+  }
 }
 
-// Function to show the mapping UI with CSV headers
+/**
+ * Show the mapping UI with CSV headers.
+ **/
 function showMappingUI(headers, apiFields) {
-    console.log(apiFields)
-    const mappingModal = document.getElementById('mapping-modal');
-    const mappingFields = document.getElementById('mapping-fields');
-    mappingModal.setAttribute('data-api-fields', JSON.stringify(apiFields));  // store API fields in modal data attribute for later retrieval
-    mappingFields.innerHTML = ''; // clear previous mappings
-    // create a select dropdown for each API field
-    apiFields.forEach(field => {
-        const row = document.createElement('div');
-        row.className = 'mapping-row';
+  const mappingModal = document.getElementById("mapping-modal");
+  const mappingFields = document.getElementById("mapping-fields");
+  const rowTemplate = document.getElementById("mapping-row-template");
+  const optionTemplate = document.getElementById("mapping-option-template");
+  mappingModal.setAttribute("data-api-fields", JSON.stringify(apiFields));
+  // Clear previous mappings (keep templates)
+  Array.from(mappingFields.children).forEach((child) => {
+    if (!child.id?.startsWith("mapping-")) child.remove();
+  });
+  // Create dropdown for each API field
+  apiFields.forEach((field) => {
+    const row = rowTemplate.content.cloneNode(true);
+    row.querySelector(".mapping-label").textContent = field;
+    const select = row.querySelector(".mapping-select");
+    select.id = `map-${field}`;
 
-        const label = document.createElement('div');
-        label.className = 'mapping-label';
-        label.textContent = field;
-
-        const select = document.createElement('select');
-        select.id = `map-${field}`;
-        select.className = 'mapping-select browser-default';
-        select.required = true;
-        // add empty option
-        const emptyOption = document.createElement('option');
-        emptyOption.value = '';
-        emptyOption.textContent = '-- Select CSV Column --';
-        emptyOption.disabled = true;
-        emptyOption.selected = true;
-        select.appendChild(emptyOption);
-
-        // add CSV headers as options
-        headers.forEach(header => {
-            const option = document.createElement('option');
-            option.value = header;
-            option.textContent = header;
-            select.appendChild(option);
-        });
-
-        row.appendChild(label);
-        row.appendChild(select);
-        mappingFields.appendChild(row);
+    headers.forEach((header) => {
+      const option = optionTemplate.content
+        .cloneNode(true)
+        .querySelector("option");
+      option.value = option.textContent = header;
+      select.appendChild(option);
     });
 
-    // initialize Materialize modal and open it
-    const modalInstance = M.Modal.init(mappingModal, {
-        dismissible: false, // Prevent closing by clicking outside
-        onCloseEnd: () => {
-            // reset form when modal closes
-            mappingFields.innerHTML = '';
-        }
-    });
-    modalInstance.open();
+    mappingFields.appendChild(row);
+  });
 
-    // initialize Materialize select dropdowns
-    setTimeout(() => {
-        M.FormSelect.init(document.querySelectorAll('.mapping-select'));
-    }, 100);
+  M.Modal.init(mappingModal, {
+    dismissible: false,
+    onOpenEnd: () =>
+      M.FormSelect.init(document.querySelectorAll(".mapping-select")),
+    onCloseEnd: () => {
+      Array.from(mappingFields.children).forEach((child) => {
+        if (!child.id?.startsWith("mapping-")) child.remove();
+      });
+    },
+  }).open();
 }
 
 // Function for submitting the mapping and parse CSV
 export async function submitMapping() {
-    // retrieve API fields from modal data attribute
-    const mappingModal = document.getElementById('mapping-modal');
-    const apiFieldsJson = mappingModal.getAttribute('data-api-fields');
-    if (!apiFieldsJson) {
-        showMessage('Mapping data not found. Please upload the file again.', 'error');
-        return;
-    }
-    const apiFields = JSON.parse(apiFieldsJson);
-    const mapping = {};
-    let allMapped = true;
-    // collect mappings
-    apiFields.forEach(apiField => {
-        const select = document.getElementById(`map-${apiField}`);
-        const selectedValue = select.value;
-        if (!selectedValue) {
-            allMapped = false;
-            return;
-        }
-        mapping[apiField] = selectedValue;
-    });
-    if (!allMapped) {
-        showMessage('Please map all required fields', 'error');
-        return;
-    }
-    // close modal
-    const modalInstance = M.Modal.getInstance(mappingModal);
-    if (modalInstance) {
-        modalInstance.close();
-    }
-    // re-upload file with mapping
-    const fileInput = document.getElementById('csvFile');
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-    formData.append('headerMapping', JSON.stringify(mapping));
+  const mappingModal = document.getElementById("mapping-modal");
+  const apiFields = JSON.parse(
+    mappingModal.getAttribute("data-api-fields") || "null"
+  );
 
-    try {
-        const response = await fetch('/upload-room', {
-            method: 'POST',
-            body: formData,
-        });
-        const resp = await response.json();
-        if (!resp.success) {
-            throw new Error(resp.message);
-        }
-        roomData.push(...resp.data);
-        showMessage(resp.message, "success");
+  if (!apiFields) {
+    return showMessage(
+      "Mapping data not found. Please upload the file again.",
+      "error"
+    );
+  }
 
-        // Enable submit button
-        document.getElementById('submit-btn').disabled = false;
-    } catch (error) {
-        const { message } = error;
-        return showMessage(message);
+  // Collect and validate mappings
+  const mapping = {};
+  for (const field of apiFields) {
+    const value = document.getElementById(`map-${field}`)?.value;
+    if (!value) {
+      return showMessage("Please map all required fields", "error");
     }
-}
+    mapping[field] = value;
+  }
 
-// Function for cancelling mapping
-export function cancelMapping() {
-    const mappingModal = document.getElementById('mapping-modal');
-    const modalInstance = M.Modal.getInstance(mappingModal);
-    if (modalInstance) {
-        modalInstance.close();
-    }
+  // Close modal and submit data
+  M.Modal.getInstance(mappingModal)?.close();
+
+  const formData = new FormData();
+  formData.append("file", document.getElementById("csvFile").files[0]);
+  formData.append("headerMapping", JSON.stringify(mapping));
+
+  try {
+    const resp = await (
+      await fetch("/upload-room", {
+        method: "POST",
+        body: formData,
+      })
+    ).json();
+
+    if (!resp.success) throw new Error(resp.message);
+
+    roomData.push(...resp.data);
+    showMessage(resp.message, "success");
+    document.getElementById("submit-btn").disabled = false;
+  } catch (error) {
+    showMessage(error.message);
+  }
 }
 
 // Function to get all locations and their OID's in order to be used in rooms API
 export async function getLocationsOID(authToken, apiInstance) {
-    let curr_page = 1, total_pages = 0, per_page = 300, max_pages = 2
-    let locAPIjson = { 'locations': [] }
-    let locOIDdic = {}
-    // make one request to determine how many total locations, then adjust per_page param accordingly
-    try {
-        const response = await fetch(`/location?apiInstance=${encodeURIComponent(apiInstance)}&per_page=${per_page}&page=${curr_page}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            },
-        });
-        if (response.ok) {
-            locAPIjson = await response.json()
-            total_pages = locAPIjson['meta']['total_pages']
-            console.log('initial meta: current_page = ' + locAPIjson['meta']['current_page'] + ', total_pages = ' + locAPIjson['meta']['total_pages'])
-        } else {
-            console.log(`failed to get initial locations: ${response.status} ${response.body}`)
-        }
-    } catch (error) {
-        console.error(error.message);
+  const locOIDdic = {};
+  let per_page = 500;
+  const max_pages = 4;
+
+  // Fetch first page to determine total pages
+  try {
+    const response = await fetch(
+      `/location?apiInstance=${encodeURIComponent(
+        apiInstance
+      )}&per_page=${per_page}&page=1`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.log(
+        `failed to get initial locations: ${response.status} ${response.body}`
+      );
+      return;
     }
 
+    const firstData = await response.json();
+    const total_pages = firstData.meta.total_pages;
+    console.log(
+      "initial location meta: current_page = " +
+        firstData.meta.current_page +
+        ", total_pages = " +
+        firstData.meta.total_pages +
+        ", items_per_page = " +
+        per_page
+    );
+
+    // Process first page locations
+    firstData.locations.forEach((item) => {
+      locOIDdic[item.job_loc_code] = `${item.oid}`;
+    });
+
+    // Fetch remaining pages if needed
     if (total_pages > 1) {
-        let max_items = per_page * total_pages
-        per_page = max_items / max_pages
-        total_pages = max_pages
-        console.log('max_items = ' + max_items)
+      const max_items = per_page * total_pages;
+      per_page = max_items / max_pages; // increase per_page in order to prevent being throttled by Locations endpt
 
-        for (let i = 1; i <= total_pages; i++) {
-            curr_page = i
-
-            try {
-                const response = await fetch(`/location?apiInstance=${encodeURIComponent(apiInstance)}&per_page=${per_page}&page=${curr_page}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Account-ID': accountId,
-                        'Content-Type': 'application/json'
-                    },
-                });
-                if (response.ok) {
-                    locAPIjson = await response.json()
-                    console.log('in loop response meta: current_page = ' + locAPIjson['meta']['current_page'] + ', total_pages = ' + locAPIjson['meta']['total_pages'])
-                    // loop through all locations and extract the OID and location id from each and store in an array
-                    locAPIjson['locations'].forEach((item, i) => {
-                        locOIDdic[item['job_loc_code']] = `${item['oid']}` // [item['oid']] = item['job_loc_code']
-                    })
-                    console.log(`\tappended page: ${curr_page} of locations:`)
-                    console.log(locOIDdic)
-
-                } else {
-                    console.log(`failed to get locations for page: ${curr_page}. Status: ${response.status}`)
-                }
-            } catch (error) {
-                console.error(error.message);
+      for (let page = 2; page <= max_pages; page++) {
+        try {
+          const response = await fetch(
+            `/location?apiInstance=${encodeURIComponent(
+              apiInstance
+            )}&per_page=${per_page}&page=${page}`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+                "Content-Type": "application/json",
+              },
             }
-        }
-    } else {
-        locAPIjson['locations'].forEach((item, i) => {
-            locOIDdic[item['job_loc_code']] = `${item['oid']}` // [item['oid']] = item['job_loc_code']
-        })
-    }
-    console.log('--------------------locOIDdic object--------------------')
-    console.log(locOIDdic)
+          );
 
-    // iterate through parsed csv to update with corresponding OID from location_id --> return csv to be used for API params 
-    roomData.forEach((item, i) => {
-        console.log('in getLocationsOID(), before OID iteration: \t', item)
-        item['location_id'] = locOIDdic[item['location_id']];
-        console.log('in getLocationsOID(), after OID iteration: \t', item)
-    })
-    console.log('--------------------roomData object after iterating matching locOIDdic--------------------')
-    console.log(roomData)
+          if (response.ok) {
+            const data = await response.json();
+            data.locations.forEach((item) => {
+              locOIDdic[item.job_loc_code] = `${item.oid}`;
+            });
+          } else {
+            console.log(
+              `failed to get locations for page: ${page}. Status: ${response.status}`
+            );
+          }
+        } catch (error) {
+          console.error(error.message);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(error.message);
+    return;
+  }
+
+  // update roomData to include OID for each location_id
+  roomData.forEach((item) => {
+    item.location_id = locOIDdic[item.location_id];
+  });
 }
 
 export async function startRoomImport() {
-    const accountId = document.getElementById('accountId').value;
-    const secretKey = document.getElementById('secretKey').value;
-    const apiInstance = document.getElementById('apiInstance').value;
-    const requestTotal = roomData.length;
-    let requestCount = 0;
-    document.getElementById('output-progress').style.display = 'flex';
-    document.getElementById('stop').disabled = false;
+  const accountId = document.getElementById("accountId").value;
+  const secretKey = document.getElementById("secretKey").value;
+  const apiInstance = document.getElementById("apiInstance").value;
+  const requestTotal = roomData.length;
+  let requestCount = 0;
+  const outputProgress = document.getElementById("output-progress");
+  const stopBtn = document.getElementById("stop");
+  const countDisplay = document.getElementById("count");
 
-    try {
-        const authToken = await getAuthToken(accountId, secretKey, apiInstance);
-        await getLocationsOID(authToken, apiInstance);
-        abortController = new AbortController();
-        const signal = abortController.signal;
-        for (const room of roomData) {
-            try {
-                const response = await createRoom(room, authToken, apiInstance, signal);
-                const roomResult = response.name
-                document.getElementById('output').innerHTML += `<p>created: ${roomResult}</p>`;
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    document.getElementById('output').innerHTML += '<p>Requests stopped by user</p>';
-                    break; // Exit loop when aborted
-                }
-                const { message } = err
-                showMessage(message);
-                document.getElementById('output').innerHTML += `<p>Error: ${message}</p>`;
-            }
-            requestCount += 1;
-            document.getElementById('count').innerHTML = `${requestCount} / ${requestTotal}`;
+  outputProgress.style.display = "flex";
+  stopBtn.disabled = false;
+
+  try {
+    const authToken = await getAuthToken(accountId, secretKey, apiInstance);
+    appendOutput("Getting account Location data...");
+
+    await getLocationsOID(authToken, apiInstance);
+    appendOutput("Location data retrieved. Starting room creation...");
+
+    abortController = new AbortController();
+
+    for (const room of roomData) {
+      try {
+        const response = await createRoom(
+          room,
+          authToken,
+          apiInstance,
+          abortController.signal
+        );
+        appendOutput(`Room created: ${response.name}.`);
+      } catch (err) {
+        if (err.name === "AbortError") {
+          appendOutput("Requests stopped by user");
+          break;
         }
-        showMessage('Task Complete', 'success')
-    } catch (err) {
-        const { message } = err
-        showMessage(message);
-        document.getElementById('output').innerHTML += `<p>Error getting Locations: ${message}</p>`;
-    } finally {
-        // Always disable stop button when function completes (success, error, or aborted)
-        document.getElementById('stop').disabled = true;
+        showMessage(err.message);
+        appendOutput(`Error: ${err.message}`);
+        console.error(`Room creation error: ${err.message}`);
+      }
+      countDisplay.innerHTML = `${++requestCount} / ${requestTotal}`;
     }
+    showMessage("Task Complete", "success");
+    console.log("Room import completed successfully");
+  } catch (err) {
+    showMessage(err.message);
+    appendOutput(`Error getting Locations: ${err.message}`);
+    console.error(`Location fetch error: ${err.message}`);
+  } finally {
+    stopBtn.disabled = true;
+  }
 }
 
 function stopRequest() {
-    if (abortController) {
-        abortController.abort(); // Abort the requests
-        document.getElementById('stop').disabled = true;
-    }
+  if (abortController) {
+    abortController.abort(); // Abort the requests
+    document.getElementById("stop").disabled = true;
+  }
 }
 
 function showMessage(message, type = "error") {
-    const classname = (type === 'success') ? "green" : "red"
-    if (typeof M !== 'undefined' && M.toast) {
-        M.toast({ html: message, classes: classname });
-    }
+  const classname = type === "success" ? "green" : "red";
+  if (typeof M !== "undefined" && M.toast) {
+    M.toast({ html: message, classes: classname });
+  }
 }
 
 function getFunctions() {
-    return {
-        createCandidates,
-        startUpdate,
-        deleteCandidates,
-        updateCandidateAttributes,
-        uploadFile,
-        uploadFileForRooms,
-        startRoomImport,
-        submitMapping,
-        cancelMapping
-    }
+  return {
+    createCandidates,
+    startUpdate,
+    deleteCandidates,
+    updateCandidateAttributes,
+    startRoomImport,
+  };
 }
 
 function executeRequest(key) {
-    const functions = getFunctions();
-    if (functions[key]) {
-        return functions[key]();
-    } else {
-        throw new Error(`Function with key "${key}" does not exist.`);
-    }
+  const functions = getFunctions();
+  if (functions[key]) {
+    return functions[key]();
+  } else {
+    throw new Error(`Function with key "${key}" does not exist.`);
+  }
 }
 
 // Attach functions to the global `window` object
 window.api = {
-    executeRequest,
-    stopRequest,
-    // uploadFile,
-    // uploadFileForRooms,
-    // startRoomImport,
-    // submitMapping,
-    // cancelMapping
+  executeRequest,
+  stopRequest,
+  uploadFile,
+  uploadFileForRooms,
+  submitMapping,
 };
 
-emitter.on('clearData', () => {
-    candidateData.length = 0; // Clear the array
-    console.log('Data cleared:', candidateData); // Call clearData when the event is emitted
+emitter.on("clearData", () => {
+  candidateData.length = 0; // Clear the array
+  roomData.length = 0;
+  console.log("Data cleared:", candidateData, roomData); // Call clearData when the event is emitted
 });
