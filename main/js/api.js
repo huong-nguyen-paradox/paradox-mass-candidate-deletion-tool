@@ -527,7 +527,7 @@ export async function getLocationsOID(authToken, apiInstance) {
       const max_items = per_page * total_pages;
       per_page = max_items / max_pages; // increase per_page in order to prevent being throttled by Locations endpt
 
-      for (let page = 2; page <= max_pages; page++) {
+      for (let page = 1; page <= max_pages; page++) {
         try {
           const response = await fetch(
             `/location?apiInstance=${encodeURIComponent(
@@ -566,6 +566,9 @@ export async function getLocationsOID(authToken, apiInstance) {
   roomData.forEach((item) => {
     item.location_id = locOIDdic[item.location_id];
   });
+  console.log('end of getLocationsOID() --> roomData:', roomData);
+    console.log('end of getLocationsOID() --> locOIDdic:', locOIDdic);
+
 }
 
 export async function startRoomImport() {
